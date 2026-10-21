@@ -133,8 +133,72 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
+    expect(find.text('Delete this task?'), findsOneWidget);
+    expect(await repository.getAll(), hasLength(1));
+    await tester.tap(find.text('Delete task'));
+    await tester.pumpAndSettle();
     expect(await repository.getAll(), isEmpty);
     expect(find.text('A little room for your ideas'), findsOneWidget);
+  });
+
+  testWidgets('cancels menu deletion and confirms swipe deletion', (
+    tester,
+  ) async {
+    await repository.add(
+      BasicTask(1, 'Keep this task', Priority.low, null, false),
+    );
+    await tester.pumpWidget(
+      MaterialApp(home: HomeScreen(service: TaskService(repository))),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Task options'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(await repository.getAll(), hasLength(1));
+
+    await tester.drag(find.byType(Dismissible), const Offset(-600, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('Delete this task?'), findsOneWidget);
+    expect(await repository.getAll(), hasLength(1));
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(await repository.getAll(), hasLength(1));
+
+    await tester.drag(find.byType(Dismissible), const Offset(-600, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete task'));
+    await tester.pumpAndSettle();
+    expect(await repository.getAll(), isEmpty);
+  });
+
+  testWidgets('restores a task with the undo action', (tester) async {
+    await repository.add(
+      BasicTask(1, 'Restore this task', Priority.medium, null, false),
+    );
+    await tester.pumpWidget(
+      MaterialApp(home: HomeScreen(service: TaskService(repository))),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Task options'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete task'));
+    await tester.pumpAndSettle();
+    expect(await repository.getAll(), isEmpty);
+
+    await tester.tap(find.text('UNDO'));
+    await tester.pumpAndSettle();
+
+    final restored = await repository.getById(1);
+    expect(restored.title, 'Restore this task');
+    expect(restored.completed, isFalse);
   });
 
   testWidgets('opens the date picker for an overdue task', (tester) async {

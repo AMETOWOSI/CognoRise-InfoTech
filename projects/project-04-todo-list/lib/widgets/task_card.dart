@@ -43,6 +43,7 @@ class TaskCard extends StatelessWidget {
           color: Color(0xFFB64C49),
         ),
       ),
+      confirmDismiss: (_) => _confirmDeletion(context),
       onDismissed: (_) => onDelete(),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 240),
@@ -180,10 +181,11 @@ class TaskCard extends StatelessWidget {
                       color: AppColors.mutedInk,
                     ),
                     padding: EdgeInsets.zero,
-                    onSelected: (value) {
+                    onSelected: (value) async {
                       if (value == 'edit') {
                         onEdit();
-                      } else {
+                      } else if (value == 'delete' &&
+                          await _confirmDeletion(context)) {
                         onDelete();
                       }
                     },
@@ -214,6 +216,31 @@ class TaskCard extends StatelessWidget {
       ),
     );
   }
+
+  Future<bool> _confirmDeletion(BuildContext context) async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          icon: const Icon(Icons.delete_outline_rounded),
+          title: const Text('Delete this task?'),
+          content: Text(
+            '“${task.title}” will be removed from your list. You can undo this '
+            'after confirming.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton.icon(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              icon: const Icon(Icons.delete_outline_rounded),
+              label: const Text('Delete task'),
+            ),
+          ],
+        ),
+      ) ??
+      false;
 
   static String _priorityLabel(Priority priority) => switch (priority) {
     Priority.high => 'High',

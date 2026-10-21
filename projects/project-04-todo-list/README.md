@@ -44,74 +44,64 @@ to verify persistence on a device.
 Task data is local to the device. This project does not provide an account,
 cloud backup, or synchronization between devices.
 
+## Security and privacy
+
+This is an offline task manager with no authentication or application backend.
+The repository does not intentionally collect or transmit task data. Tasks are
+stored locally as JSON through `shared_preferences`; this storage is not
+encrypted and must not be treated as a secure vault. Do not save passwords,
+authentication codes, financial details, or other highly sensitive data in
+task titles or notes.
+
+The security review did not identify a verified exploitable vulnerability in
+the reviewed project. Storage corruption can prevent tasks from loading, but
+the app reports a recoverable error rather than treating invalid data as a
+valid task list. Keep Flutter and package dependencies updated, and review
+platform signing and application identifiers before publishing a release.
+
 ## Screenshots and demo videos
 
-There are no demo recordings committed yet. Add your own recordings after
-capturing the app; do not leave example links pointing to files that are not in
-the repository.
-
-Create this folder inside the project:
+The video links below are ready for your recordings. Save each video in
+`docs/media/` using the exact filename shown in the table. The links will work
+on GitHub as soon as the files are committed; you do not need to edit this
+README.
 
 ```text
 docs/
 └── media/
-    ├── task-list.png
-    ├── create-task.png
-    ├── filters-and-sorting.png
-    ├── task-manager-demo.gif
-    └── task-manager-demo.mp4
+    ├── create-and-edit.mp4
+    ├── complete-and-filter.mp4
+    ├── delete-and-undo.mp4
+    └── restart-persistence.mp4
 ```
 
-After adding a screenshot, show it in this README with a relative path:
+| Video file | What to record |
+| --- | --- |
+| [Create and edit a task](docs/media/create-and-edit.mp4) | Add a task, then change its title or priority. |
+| [Complete a task and use filters](docs/media/complete-and-filter.mp4) | Mark a task complete and switch between list filters. |
+| [Confirm deletion and undo](docs/media/delete-and-undo.mp4) | Show the confirmation dialog, delete, and use Undo. |
+| [Check saved tasks after relaunch](docs/media/restart-persistence.mp4) | Add a task, fully close the app, reopen it, and find the task again. |
+
+GitHub does not consistently play repository MP4 files inline. These links open
+the video file when selected. For an inline preview, optionally add a short,
+optimized `docs/media/overview.gif` and insert this line below the table:
 
 ```markdown
-![Task List screen](docs/media/task-list.png)
+![Task List app preview](docs/media/overview.gif)
 ```
 
-For a compact preview, convert a short screen recording to an optimized GIF
-and embed it:
+To add the recordings:
 
-```markdown
-![Short Task List app demo](docs/media/task-manager-demo.gif)
-```
+1. Record the app on an emulator or a phone.
+2. Save each clip with the exact filename in the table.
+3. Copy the files into this project's `docs/media/` folder.
+4. Commit and push the video files along with the README.
+5. Open the project README on GitHub and click each link to verify playback.
 
-GIFs are useful for a preview, but a long or high-resolution recording can make
-the repository slow to clone. Keep the preview short and optimized. Link to the
-full recording separately:
-
-```markdown
-[Watch the full app demo (MP4)](docs/media/task-manager-demo.mp4)
-```
-
-GitHub README pages do not reliably play a repository MP4 inline across
-devices. For a dependable full-length video, upload it as a GitHub Release
-asset or attach it to a GitHub issue, discussion, or pull request, then link
-the resulting URL:
-
-```markdown
-[Watch the full app demo](PASTE-THE-GITHUB-VIDEO-URL-HERE)
-```
-
-Replace the example URL with the real URL GitHub gives you. Keep the GIF
-preview and MP4 in this project's `docs/media/` folder only if you want the
-video files versioned with the source code. Never add a broken placeholder
-image or a link that only works on your computer.
-
-### Suggested recordings
-
-Record separate short clips so a reviewer can quickly find the behavior they
-want to see:
-
-1. `create-and-edit.mp4` — create a task and edit its title or priority.
-2. `complete-and-filter.mp4` — mark a task complete and switch between filters.
-3. `delete-and-undo.mp4` — delete a task and restore it from the confirmation.
-4. `restart-persistence.mp4` — create a task, fully close the app, reopen it,
-   and show the task is still present.
-
-Use a screen recorder on an emulator or physical device. Avoid recording
-personal notifications, private task names, passwords, or account details.
-For the portfolio README, a single short GIF and links to the full clips are
-usually clearer than embedding several large recordings.
+Keep clips short and avoid recording personal notifications, private task
+names, passwords, or account details. If an MP4 is too large for GitHub, upload
+it as a GitHub Release asset and replace that row's relative link with the
+Release URL.
 
 ## Technology
 

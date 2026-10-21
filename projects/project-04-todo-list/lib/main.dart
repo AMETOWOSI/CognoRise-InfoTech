@@ -71,7 +71,10 @@ class _StartupErrorScreen extends StatelessWidget {
           children: [
             Icon(Icons.error_outline_rounded, size: 42, color: Colors.red),
             SizedBox(height: 14),
-            Text('The app could not start.', textAlign: TextAlign.center),
+            Text(
+              'The app could not start. Please close and reopen it.',
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),

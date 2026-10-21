@@ -55,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _loadError = 'Your tasks could not be loaded: $error';
+        _loadError = 'Your tasks could not be loaded. Please try again.';
         _loading = false;
       });
     }
@@ -89,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _showMessage(task == null ? 'Task added.' : 'Task updated.');
       }
     } catch (error) {
-      _showMessage('The task could not be saved: $error');
+      _showMessage('The task could not be saved. Please try again.');
     }
   }
 
@@ -98,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
       await widget.service.toggleTaskCompletion(task.id);
       await _loadTasks();
     } catch (error) {
-      _showMessage('The task status could not be changed: $error');
+      _showMessage('The task status could not be changed. Please try again.');
     }
   }
 
@@ -119,7 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     } catch (error) {
-      _showMessage('The task could not be deleted: $error');
+      _showMessage('The task could not be deleted. Please try again.');
     }
   }
 
@@ -128,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
       await widget.service.repository.add(task);
       await _loadTasks();
     } catch (error) {
-      _showMessage('The task could not be restored: $error');
+      _showMessage('The task could not be restored. Please try again.');
     }
   }
 
