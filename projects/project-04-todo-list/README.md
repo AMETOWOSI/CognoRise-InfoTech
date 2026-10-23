@@ -4,10 +4,7 @@ Task List is a Flutter task manager built for the CognoRise InfoTech App Develop
 Internship. It helps users turn a busy list into clear next steps: create a
 task, set a priority or due date, mark it complete, and find it again later.
 
-This README belongs to **this application only**. In the internship portfolio,
-keep it next to this project's code at
-`projects/project-04-todo-list/README.md`. Keep the repository's top-level
-`README.md` as the portfolio overview and link to this project from there.
+This README belongs to **this application only**. 
 
 ## Project status
 
