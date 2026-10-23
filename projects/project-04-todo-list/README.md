@@ -56,50 +56,6 @@ the app reports a recoverable error rather than treating invalid data as a
 valid task list. Keep Flutter and package dependencies updated, and review
 platform signing and application identifiers before publishing a release.
 
-## Screenshots and demo videos
-
-The video links below are ready for your recordings. Save each video in
-`docs/media/` using the exact filename shown in the table. The links will work
-on GitHub as soon as the files are committed; you do not need to edit this
-README.
-
-```text
-docs/
-└── media/
-    ├── create-and-edit.mp4
-    ├── complete-and-filter.mp4
-    ├── delete-and-undo.mp4
-    └── restart-persistence.mp4
-```
-
-| Video file | What to record |
-| --- | --- |
-| [Create and edit a task](docs/media/create-and-edit.mp4) | Add a task, then change its title or priority. |
-| [Complete a task and use filters](docs/media/complete-and-filter.mp4) | Mark a task complete and switch between list filters. |
-| [Confirm deletion and undo](docs/media/delete-and-undo.mp4) | Show the confirmation dialog, delete, and use Undo. |
-| [Check saved tasks after relaunch](docs/media/restart-persistence.mp4) | Add a task, fully close the app, reopen it, and find the task again. |
-
-GitHub does not consistently play repository MP4 files inline. These links open
-the video file when selected. For an inline preview, optionally add a short,
-optimized `docs/media/overview.gif` and insert this line below the table:
-
-```markdown
-![Task List app preview](docs/media/overview.gif)
-```
-
-To add the recordings:
-
-1. Record the app on an emulator or a phone.
-2. Save each clip with the exact filename in the table.
-3. Copy the files into this project's `docs/media/` folder.
-4. Commit and push the video files along with the README.
-5. Open the project README on GitHub and click each link to verify playback.
-
-Keep clips short and avoid recording personal notifications, private task
-names, passwords, or account details. If an MP4 is too large for GitHub, upload
-it as a GitHub Release asset and replace that row's relative link with the
-Release URL.
-
 ## Technology
 
 - Flutter and Dart
