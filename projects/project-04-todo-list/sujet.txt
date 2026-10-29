@@ -1,0 +1,25 @@
+https://nextflutter.com/courses/00000000-3000-4000-8000-000000000003
+
+Projet Dart — Application CLI de gestion de tâches
+Valide ta maîtrise de Dart en construisant une application en ligne de commande complète.
+
+Instructions
+
+max 100 pts
+Construis une application CLI de gestion de tâches en Dart pur (sans Flutter).
+
+Fonctionnalités obligatoires :
+
+Ajouter une tâche (titre, priorité : low/medium/high, date limite optionnelle)
+Lister toutes les tâches (avec tri par priorité ou date)
+Marquer une tâche comme terminée
+Supprimer une tâche
+Persister les données dans un fichier JSON local
+Exigences techniques :
+
+Utiliser les classes abstraites et l'héritage (ex: Task → UrgentTask)
+Implémenter au moins une interface
+Utiliser les génériques (ex: Repository<T>)
+Gérer les erreurs avec des exceptions personnalisées
+Écrire au moins 5 tests unitaires avec le package `test`
+Livraison : repo GitHub public avec README expliquant comment lancer l'app et les tests.

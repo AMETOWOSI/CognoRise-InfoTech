@@ -201,6 +201,35 @@ void main() {
     expect(restored.completed, isFalse);
   });
 
+  testWidgets('dismisses the deletion message after five seconds', (
+    tester,
+  ) async {
+    await repository.add(
+      BasicTask(1, 'Temporary task', Priority.medium, null, false),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(accessibleNavigation: true),
+          child: HomeScreen(service: TaskService(repository)),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Task options'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete task'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Task deleted.'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Task deleted.'), findsNothing);
+  });
+
   testWidgets('opens the date picker for an overdue task', (tester) async {
     await repository.add(
       BasicTask(1, 'Overdue task', Priority.low, DateTime(2000, 1, 1), false),

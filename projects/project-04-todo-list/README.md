@@ -1,73 +1,36 @@
-# Project 4 — Task List
+# Task List
 
-Task List is a Flutter task manager built for the CognoRise InfoTech App Development
-Internship. It helps users turn a busy list into clear next steps: create a
-task, set a priority or due date, mark it complete, and find it again later.
+Task List is a Flutter application for creating and organizing everyday tasks. It was built as Project 4 for the CognoRise InfoTech App Development Internship. The app supports priorities, due dates, completion tracking, and local persistence.
 
-This README belongs to **this application only**. 
+## Application demo
 
-## Project status
+The preview below is a frame captured from the full walkthrough. Select it to open the video.
 
-| Check | Status |
-| --- | --- |
-| Create, edit, delete, and complete tasks | Implemented |
-| Local task storage | Implemented with `shared_preferences` and JSON |
-| Pending/completed filters and sorting | Implemented |
-| Empty, loading, and error states | Implemented |
-| Completion and dismissal animations | Implemented |
-| Automated tests | `flutter test` passes |
-| Static analysis | `flutter analyze` passes |
-| Real-device close-and-reopen check | Recommended before submission |
+[![Task List showing a high-priority urgent task](./assets/task-list-preview.png)](./20261022-2335-33.0347895.mp4)
 
-The automated persistence tests use a mocked preferences store. They verify
-that saved tasks can be read by a newly created repository and that the app
-widget can be recreated while the test storage remains available. They do not
-close and relaunch a real Android or iOS process. Follow the manual check below
-to verify persistence on a device.
+The walkthrough is 1 minute 37 seconds long and demonstrates the task editor, priority and due-date selection, urgent tasks, filtering, completion, deletion confirmation, and undo. The MP4 is stored in this repository. GitHub's README view does not reliably embed repository MP4 files as inline players; selecting the preview opens the video file, where playback or download depends on the GitHub view and browser.
 
-## What you can do
+## Features
 
-- Create a task with a title, priority, optional due date, and optional urgency
-  level.
-- Edit a task without losing its completion state.
-- Mark a task complete or return it to the pending list.
-- Delete a task with a swipe or the task options menu, then undo the deletion
-  from the confirmation message.
-- Show all tasks, pending tasks, or completed tasks.
-- Sort tasks by priority or due date.
-- Use the app in English, including the date picker.
-- Keep tasks on the current device between app launches.
+- Create tasks with a required title, priority, optional due date, and optional urgency level.
+- Edit task details while preserving completion status.
+- Mark tasks complete and return them to the pending list.
+- Filter the list by all, pending, or completed tasks.
+- Sort by priority or due date. Urgency level is considered before priority in priority sorting.
+- Confirm deletion from the task menu or swipe action, then restore a deleted task with **Undo**.
+- Display loading, empty, and recoverable error states.
+- Store task data locally between app launches.
+- Use an English interface, accessible completion labels, and subtle completion animations.
 
-Task data is local to the device. This project does not provide an account,
-cloud backup, or synchronization between devices.
+## Requirements
 
-## Security and privacy
+- Flutter SDK with a Dart SDK satisfying the constraint in [`pubspec.yaml`](./pubspec.yaml) (`^3.10.1`).
+- Android Studio or Visual Studio Code with Flutter and Dart support.
+- An Android emulator or device. An iOS simulator requires macOS.
 
-This is an offline task manager with no authentication or application backend.
-The repository does not intentionally collect or transmit task data. Tasks are
-stored locally as JSON through `shared_preferences`; this storage is not
-encrypted and must not be treated as a secure vault. Do not save passwords,
-authentication codes, financial details, or other highly sensitive data in
-task titles or notes.
+## Run the application
 
-The security review did not identify a verified exploitable vulnerability in
-the reviewed project. Storage corruption can prevent tasks from loading, but
-the app reports a recoverable error rather than treating invalid data as a
-valid task list. Keep Flutter and package dependencies updated, and review
-platform signing and application identifiers before publishing a release.
-
-## Technology
-
-- Flutter and Dart
-- Material 3 widgets
-- `shared_preferences` for local key-value storage
-- JSON serialization for task records
-- `flutter_test` and `package:test`
-
-## Run the app
-
-Install Flutter and an Android emulator, iOS simulator (on macOS), or connect a
-physical device. From this project's directory, run:
+Run these commands from the directory containing `pubspec.yaml`:
 
 ```sh
 flutter pub get
@@ -75,87 +38,54 @@ flutter devices
 flutter run
 ```
 
-To run the automated tests and static analysis:
+Run the automated tests and static analysis from the same directory:
 
 ```sh
 flutter test
 flutter analyze
 ```
 
-To run an individual test file:
-
-```sh
-flutter test test/shared_preferences_task_repository_test.dart
-```
-
-## Verify persistence on a real device
-
-1. Start the app on an emulator or phone.
-2. Add a task with a recognizable title.
-3. Close the app completely. Do not only navigate to another screen.
-4. Launch the app again.
-5. Confirm that the task, its completion state, priority, due date, and urgency
-   are still correct.
-6. Repeat after editing and deleting a task.
-
-This checks the platform storage implementation in addition to the mocked
-automated test.
-
-## How the code is organized
+## Project structure
 
 ```text
-lib/
-├── main.dart
-├── app_theme.dart
-├── exceptions/
-│   └── task_exception.dart
-├── models/
-│   ├── basic_task.dart
-│   ├── priority.dart
-│   ├── task.dart
-│   ├── task_factory.dart
-│   └── urgent_task.dart
-├── repositories/
-│   ├── repository.dart
-│   ├── shared_preferences_task_repository.dart
-│   └── task_repository.dart
-├── screens/
-│   └── home_screen.dart
-├── services/
-│   └── task_service.dart
-└── widgets/
-    ├── task_card.dart
-    └── task_editor_sheet.dart
-
-test/
-├── home_screen_test.dart
-├── shared_preferences_task_repository_test.dart
-├── task_model_test.dart
-├── task_repository_test.dart
-└── task_service_test.dart
+.
+├── assets/
+│   └── task-list-preview.png
+├── bin/
+│   └── task_manager.dart
+├── lib/
+│   ├── main.dart
+│   ├── app_theme.dart
+│   ├── exceptions/
+│   ├── models/
+│   ├── repositories/
+│   ├── screens/
+│   ├── services/
+│   └── widgets/
+├── test/
+├── android/
+├── ios/
+├── web/
+├── 20261022-2335-33.0347895.mp4
+├── pubspec.yaml
+└── README.md
 ```
 
-The app is split by responsibility:
+### Application layers
 
-- **Models** describe task data and convert it to and from JSON.
-- **Repositories** define and implement task storage.
-- **TaskService** applies task rules, validates input, generates IDs, and sorts
-  tasks.
-- **HomeScreen** coordinates loading, filtering, and user actions.
-- **Widgets** render reusable task cards and the add/edit form.
-- **Tests** check models, service behavior, storage, and user flows.
+- **Models** define the shared `Task` contract, `BasicTask`, `UrgentTask`, and the `Priority` enum. They also convert task data to and from JSON.
+- **TaskFactory** reads the JSON `type` field and reconstructs the matching task subtype.
+- **Repositories** provide a common CRUD contract. The Flutter app uses `SharedPreferencesTaskRepository`; `TaskRepository` stores JSON in a file and is used by the console application and related tests.
+- **TaskService** validates input, creates and updates tasks, assigns IDs, sorts tasks, and changes completion state.
+- **HomeScreen** loads and filters tasks, handles screen state, and connects user actions to the service.
+- **TaskEditorSheet** gathers input and returns a `TaskDraft`. It does not write directly to storage.
+- **TaskCard** renders an individual task and forwards edit, completion, and deletion actions to the screen.
 
-### One task from the form to local storage
+### Saving a task
 
-When a user saves the editor form, the form returns a `TaskDraft`. The home
-screen passes that draft's values to the service. The service validates them,
-creates a `BasicTask` or `UrgentTask`, and asks the repository to save it.
+When a user saves the editor form, `TaskEditorSheet` returns a `TaskDraft`. `HomeScreen` passes its values to `TaskService`, which validates them and creates a `BasicTask` or `UrgentTask`. The Flutter repository serializes the task list as JSON and stores it in `shared_preferences` under the `tasks` key. When the list is loaded, `TaskFactory` uses each record's `type` field to restore the correct task model.
 
-The repository converts tasks to JSON and stores that JSON under the
-`tasks` preference key. When the app loads, the repository decodes the JSON and
-`TaskFactory` recreates the correct task subtype.
-
-The stored record is conceptually similar to:
+An urgent task is represented by data similar to:
 
 ```json
 {
@@ -169,72 +99,47 @@ The stored record is conceptually similar to:
 }
 ```
 
-The `type` field is important: it allows the factory to distinguish a regular
-task from an urgent task when data is restored.
-
-## Main user flows
-
-### Add or edit a task
-
-The editor collects the title, priority, optional due date, and urgency
-settings. It validates the title before returning the draft. The service
-validates it again so that business rules are enforced even if another part of
-the app calls the service directly.
-
-### Complete a task
-
-The task card calls a callback when its completion control is tapped. The home
-screen asks the service to toggle the task's completion state, reloads the
-stored tasks, and displays the updated card.
-
-### Filter and sort
-
-The service sorts the task list by priority or due date. The home screen
-filters the returned list into all, pending, or completed tasks. Filtering only
-changes what is displayed; it does not delete or rewrite hidden tasks.
-
-### Delete and undo
-
-The repository removes the task from saved data. The home screen keeps the
-task briefly for the undo action shown in a `SnackBar`. If the user chooses
-undo, the task is added back to the repository.
-
 ## Tests
 
-The suite covers:
+The test suite is organized by responsibility:
 
-- Model serialization and task subtype restoration.
-- Service validation, ID generation, sorting, and completion behavior.
-- Repository add, update, delete, and lookup behavior.
-- Shared-preferences persistence with a mocked device store.
-- Screen flows for empty state, adding, editing, completing, deleting, and
-  filtering tasks.
-- App-widget recreation while the mocked preference data remains available.
+- `test/task_model_test.dart` checks JSON serialization for task models.
+- `test/task_service_test.dart` checks task creation, title validation, completion, urgent tasks, sorting, and concurrent completion toggles.
+- `test/task_repository_test.dart` checks file-based repository operations.
+- `test/shared_preferences_task_repository_test.dart` checks local repository add, update, delete, and restoration when the repository is recreated using mocked preferences.
+- `test/home_screen_test.dart` checks interface flows including create, edit, filters, delete confirmation, undo, and the five-second deletion message.
 
-Run all tests from the project directory:
+The persistence tests use mocked preferences. They do not terminate and relaunch a real device process. For a device-level check, create a task, fully close the app, reopen it, and confirm the task is still present.
 
-```sh
-flutter test
-```
+## Privacy and security
 
-## Reference and implementation choices
+Tasks are stored locally on the device. The app does not implement accounts, a backend, or cloud synchronization. `shared_preferences` is not encrypted storage, so do not store passwords, authentication codes, financial details, or other sensitive information in task data.
 
-The internship brief links to
-[dwyl's Flutter Todo List tutorial](https://github.com/dwyl/flutter-todo-list-tutorial),
-which demonstrates task management with Riverpod and also discusses an API
-integration. Task List follows the same broad learning goal but uses a different
-structure: a task service and repository contract, with on-device storage for
-this version. The tutorial is a reference for learning, not code copied into
-this project.
+Before distributing an Android release, replace the example application ID with one owned by the publisher and configure a private release signing key. Do not commit signing keys or their passwords.
 
-## Known limitations
+## Technology
 
-- Tasks are stored on one device and are not backed up or synchronized.
-- `shared_preferences` is appropriate for a small learning project. For
-  larger datasets or stronger data guarantees, use a local database such as
-  SQLite/Drift.
-- The release Android build still needs a real application ID and a private
-  release signing key before publishing to an app store. Never commit a
-  signing key or its password.
-- For very large task lists, consider replacing the eagerly built list with a
-  lazy sliver list.
+- **Flutter and Dart** for the application and user interface.
+- **Material 3** widgets for the interface components.
+- **`shared_preferences`** for the Flutter app's local key-value storage.
+- **JSON** for serializing and restoring task records.
+- **`flutter_test` and `package:test`** for widget and unit tests.
+
+## Reference
+
+The project brief references [dwyl's Flutter Todo List tutorial](https://github.com/dwyl/flutter-todo-list-tutorial). Task List addresses the same broad task-management learning goals with its own service-and-repository structure and local persistence implementation.
+
+## Limitations
+
+- Tasks remain on one device; backup and synchronization are not implemented.
+- `shared_preferences` is intended for small amounts of local data. A database such as SQLite or Drift would be more suitable for larger datasets or more advanced queries.
+- Persistence is covered with mocked storage in automated tests; a real-device relaunch check remains useful.
+- Android release signing and a publisher-specific application ID must be configured before app-store distribution.
+
+## Learning concepts
+
+The project demonstrates Flutter widget composition, form validation, asynchronous UI updates, Dart model types, JSON serialization, repository abstractions, local persistence, and automated widget and unit testing.
+
+## License
+
+This repository does not include a `LICENSE` file. No license for reuse or redistribution is specified.

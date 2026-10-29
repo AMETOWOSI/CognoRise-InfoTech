@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:task_manager/app_theme.dart';
 import 'package:task_manager/models/task.dart';
@@ -22,6 +24,13 @@ class _HomeScreenState extends State<HomeScreen> {
   String _sortBy = 'priority';
   bool _loading = true;
   String? _loadError;
+  Timer? _deleteMessageTimer;
+
+  @override
+  void dispose() {
+    _deleteMessageTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -107,17 +116,27 @@ class _HomeScreenState extends State<HomeScreen> {
       await widget.service.deleteTask(task.id);
       await _loadTasks();
       if (!mounted) return;
+      _deleteMessageTimer?.cancel();
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Task deleted.'),
+          duration: const Duration(seconds: 5),
           action: SnackBarAction(
             label: 'UNDO',
             textColor: const Color(0xFFD5CEFF),
-            onPressed: () => _restoreTask(task),
+            onPressed: () {
+              _deleteMessageTimer?.cancel();
+              _restoreTask(task);
+            },
           ),
         ),
       );
+      _deleteMessageTimer = Timer(const Duration(seconds: 5), () {
+        if (mounted) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        }
+      });
     } catch (error) {
       _showMessage('The task could not be deleted. Please try again.');
     }
@@ -140,6 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showMessage(String message) {
     if (!mounted) return;
+    _deleteMessageTimer?.cancel();
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));

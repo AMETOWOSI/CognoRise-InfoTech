@@ -101,7 +101,7 @@ class _TaskEditorSheetState extends State<TaskEditorSheet> {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 23),
-              const _FieldLabel('TITRE'),
+              const _FieldLabel('TITLE'),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _titleController,
