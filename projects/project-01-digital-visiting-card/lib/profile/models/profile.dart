@@ -1,5 +1,5 @@
 class Profile {
-  const Profile({
+  Profile({
     required this.fullName,
     required this.jobTitle,
     required this.company,
@@ -12,30 +12,30 @@ class Profile {
     required this.facebookUrl,
     required this.linkedinUrl,
     required this.instagramUrl,
-    required this.skills,
-  });
+    required List<String> skills,
+  }) : skills = List.unmodifiable(skills);
 
-  static const sample = Profile(
-    fullName: 'Alex Morgan',
+  static final sample = Profile(
+    fullName: 'Ama KWATCHA',
     jobTitle: 'Flutter Developer',
-    company: 'Independent Developer',
+    company: '',
     bio:
-        'I build thoughtful mobile experiences with clean code and a focus on the people who use them.',
-    email: 'alex.morgan@example.com',
-    phone: '+1 555 010 2040',
-    location: 'London, United Kingdom',
-    portfolioUrl: 'https://example.com',
-    whatsappNumber: '+15550102040',
+        'Flutter learner based in Togo, building responsive mobile experiences with Dart and Flutter.',
+    email: '',
+    phone: '',
+    location: 'Togo',
+    portfolioUrl: '',
+    whatsappNumber: '',
     facebookUrl: '',
-    linkedinUrl: 'https://www.linkedin.com/in/alex-morgan',
+    linkedinUrl: '',
     instagramUrl: '',
     skills: [
       'Flutter',
       'Dart',
       'Mobile UI',
-      'REST APIs',
+      'GoRouter',
       'Git',
-      'Problem solving',
+      'Responsive design',
     ],
   );
 
@@ -127,7 +127,7 @@ class Profile {
       if (rawSkills.any((item) => item is! String)) {
         throw const FormatException('The stored profile skills are invalid.');
       }
-      skills = List<String>.unmodifiable(rawSkills.whereType<String>());
+      skills = rawSkills.whereType<String>().toList(growable: false);
     } else {
       throw const FormatException('The stored profile skills are invalid.');
     }

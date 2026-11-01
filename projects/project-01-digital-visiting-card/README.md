@@ -17,7 +17,7 @@ This README describes this application only. The project is intended to live at
 | Local profile storage | Implemented with `shared_preferences` |
 | Contact QR code | Generated from the current profile as a vCard |
 | Portfolio and social links | Optional and validated before opening |
-| Automated tests | Passed: 13 tests with `flutter test` |
+| Automated tests | Passed: 16 tests with `flutter test` |
 | Static analysis | Passed with `flutter analyze` |
 | Android debug build | Passed with `flutter build apk --debug` |
 | Real-device persistence check | Recommended before submission |
@@ -53,7 +53,8 @@ authentication codes, or other highly sensitive information in the profile.
 The QR code is visible to anyone who can see the screen. It contains the
 profile's contact details, job and company information, location, introduction,
 and valid portfolio or social URLs. Review those fields before sharing the QR
-code.
+code. The starter profile leaves personal contact details and social URLs blank
+so that no unverified information is published.
 
 A static security review did not identify a verified exploitable vulnerability
 in the reviewed application code and platform configuration. A query of the
@@ -100,10 +101,16 @@ flutter run -d <device-id>
 
 ## Personalize the sample profile
 
-The initial example profile is defined in
+The initial profile for a fresh installation is defined in
 [`lib/profile/models/profile.dart`](lib/profile/models/profile.dart). Use
-**Edit profile** in the app to replace the sample values. The profile is saved
-on the current device and is not sent to a server.
+**Edit profile** to update the profile for Ama KWATCHA in Togo. Personal
+contact details and social URLs remain blank until you provide verified
+information. The profile is saved on the current device and is not sent to a
+server.
+
+An existing installation continues to use its saved profile instead of these
+starter values. Update it with **Edit profile**, or clear the app's local data
+if you want to restore the starter profile.
 
 Scan the QR code with a second phone and confirm that the expected contact
 fields are offered for import. Portfolio and social URLs are optional; invalid

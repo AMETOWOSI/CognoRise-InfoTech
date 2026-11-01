@@ -40,6 +40,18 @@ void main() {
   });
 
   group('Profile', () {
+    test('uses Ama KWATCHA as the Togo-based starter profile', () {
+      expect(Profile.sample.fullName, 'Ama KWATCHA');
+      expect(Profile.sample.location, 'Togo');
+      expect(Profile.sample.email, isEmpty);
+      expect(Profile.sample.phone, isEmpty);
+      expect(Profile.sample.portfolioUrl, isEmpty);
+      expect(Profile.sample.whatsappNumber, isEmpty);
+      expect(Profile.sample.facebookUrl, isEmpty);
+      expect(Profile.sample.linkedinUrl, isEmpty);
+      expect(Profile.sample.instagramUrl, isEmpty);
+    });
+
     test('round-trips its fields through JSON', () {
       final profile = Profile.sample.copyWith(
         fullName: 'Jordan Lee',
@@ -47,6 +59,13 @@ void main() {
       );
 
       expect(Profile.fromJson(profile.toJson()).toJson(), profile.toJson());
+    });
+
+    test('keeps skills immutable', () {
+      expect(
+        () => Profile.sample.skills.add('Unexpected'),
+        throwsUnsupportedError,
+      );
     });
 
     test('rejects malformed profile JSON', () {
@@ -84,20 +103,37 @@ void main() {
   });
 
   group('buildVCard', () {
-    test('includes saved social and portfolio URLs', () {
-      final card = buildVCard(Profile.sample);
+    test('includes contact details and configured web URLs', () {
+      final profile = Profile.sample.copyWith(
+        email: 'ama@example.test',
+        phone: '+228 90 00 00 00',
+        portfolioUrl: 'https://portfolio.example.test',
+        linkedinUrl: 'https://linkedin.example.test/ama',
+      );
+      final card = buildVCard(profile);
 
       expect(card, contains('BEGIN:VCARD\r\n'));
       expect(card, contains('VERSION:3.0\r\n'));
-      expect(card, contains('FN:Alex Morgan\r\n'));
-      expect(card, contains('URL:https://example.com\r\n'));
-      expect(card, contains('URL:https://www.linkedin.com/in/alex-morgan'));
+      expect(card, contains('FN:Ama KWATCHA\r\n'));
+      expect(card, contains('TEL;TYPE=CELL:+228 90 00 00 00'));
+      expect(card, contains('EMAIL;TYPE=INTERNET:ama@example.test'));
+      expect(card, contains('URL:https://portfolio.example.test'));
+      expect(card, contains('URL:https://linkedin.example.test/ama'));
       expect(card, endsWith('END:VCARD'));
+    });
+
+    test('does not publish contact details that were not provided', () {
+      final card = buildVCard(Profile.sample);
+
+      expect(card, contains('FN:Ama KWATCHA\r\n'));
+      expect(card, isNot(contains('TEL;')));
+      expect(card, isNot(contains('EMAIL;')));
+      expect(card, isNot(contains('URL:')));
     });
 
     test('omits blank optional URLs and escapes vCard text', () {
       final profile = Profile.sample.copyWith(
-        fullName: 'Alex, Morgan',
+        fullName: 'Ama, KWATCHA',
         portfolioUrl: '',
         linkedinUrl: '',
         facebookUrl: '',
@@ -107,7 +143,7 @@ void main() {
 
       final card = buildVCard(profile);
 
-      expect(card, contains(r'FN:Alex\, Morgan'));
+      expect(card, contains(r'FN:Ama\, KWATCHA'));
       expect(card, contains(r'NOTE:Design\; build\, repeat'));
       expect(card, isNot(contains('URL:')));
     });

@@ -23,15 +23,12 @@ void main() {
     await tester.pumpWidget(MyApp(repository: repository));
     await tester.pumpAndSettle();
 
-    expect(find.text('Alex Morgan'), findsOneWidget);
-    expect(find.text('View portfolio'), findsOneWidget);
+    expect(find.text('Ama KWATCHA'), findsOneWidget);
+    expect(find.text('View portfolio'), findsNothing);
     expect(find.byType(QrImageView), findsOneWidget);
 
-    await tester.scrollUntilVisible(
-      find.text('Skills'),
-      240,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await tester.ensureVisible(find.text('Skills'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Skills'));
     await tester.pumpAndSettle();
 
@@ -47,28 +44,22 @@ void main() {
     await tester.pumpWidget(MyApp(repository: repository));
     await tester.pumpAndSettle();
 
-    await tester.scrollUntilVisible(
-      find.text('About'),
-      240,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await tester.ensureVisible(find.text('About'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('About'));
     await tester.pumpAndSettle();
     expect(find.text('A little about me'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('Contact'),
-      240,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await tester.ensureVisible(find.text('Contact'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Contact'));
     await tester.pumpAndSettle();
 
     expect(find.text('Let’s connect'), findsOneWidget);
-    expect(find.text('WhatsApp'), findsOneWidget);
-    expect(find.text('LinkedIn'), findsOneWidget);
+    expect(find.text('WhatsApp'), findsNothing);
+    expect(find.text('LinkedIn'), findsNothing);
     expect(find.text('Facebook'), findsNothing);
     expect(find.text('Instagram'), findsNothing);
   });
@@ -83,7 +74,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Alex Morgan'), findsOneWidget);
+    expect(find.text('Ama KWATCHA'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.byType(QrImageView),
       180,
@@ -102,11 +93,21 @@ void main() {
     await tester.pumpAndSettle();
 
     final nameField = find.byType(TextFormField).first;
+    final formScroll = find
+        .descendant(
+          of: find.byType(SingleChildScrollView),
+          matching: find.byWidgetPredicate(
+            (widget) =>
+                widget is Scrollable &&
+                widget.axisDirection == AxisDirection.down,
+          ),
+        )
+        .first;
     await tester.enterText(nameField, '');
     await tester.scrollUntilVisible(
       find.text('Save profile'),
       280,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: formScroll,
     );
     await tester.tap(find.text('Save profile'));
     await tester.pumpAndSettle();
@@ -114,21 +115,34 @@ void main() {
     expect(find.text('This field is required.'), findsOneWidget);
     expect(repository.savedProfile, isNull);
 
-    await tester.scrollUntilVisible(
-      nameField,
-      -280,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.enterText(nameField, 'Taylor Swift');
+    await tester.scrollUntilVisible(nameField, -280, scrollable: formScroll);
+    await tester.enterText(nameField, 'Ama KWATCHA');
+    final phoneField = find.byKey(const ValueKey<String>('phone'));
+    await tester.scrollUntilVisible(phoneField, 280, scrollable: formScroll);
+    await tester.enterText(phoneField, '+228 90 00 ABC');
     await tester.scrollUntilVisible(
       find.text('Save profile'),
       280,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: formScroll,
     );
     await tester.tap(find.text('Save profile'));
     await tester.pumpAndSettle();
 
-    expect(repository.savedProfile?.fullName, 'Taylor Swift');
-    expect(find.text('Taylor Swift'), findsOneWidget);
+    expect(find.text('Enter a valid phone number.'), findsOneWidget);
+    expect(repository.savedProfile, isNull);
+
+    await tester.scrollUntilVisible(phoneField, -280, scrollable: formScroll);
+    await tester.enterText(phoneField, '+228 90 00 00 00');
+    await tester.scrollUntilVisible(
+      find.text('Save profile'),
+      280,
+      scrollable: formScroll,
+    );
+    await tester.tap(find.text('Save profile'));
+    await tester.pumpAndSettle();
+
+    expect(repository.savedProfile?.fullName, 'Ama KWATCHA');
+    expect(repository.savedProfile?.phone, '+228 90 00 00 00');
+    expect(find.text('Ama KWATCHA'), findsOneWidget);
   });
 }

@@ -77,18 +77,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     'Full name',
                     icon: Icons.person_outline_rounded,
                     required: true,
+                    maxLength: 100,
                   ),
-                  _field('jobTitle', 'Job title', icon: Icons.work_outline),
+                  _field(
+                    'jobTitle',
+                    'Job title',
+                    icon: Icons.work_outline,
+                    maxLength: 80,
+                  ),
                   _field(
                     'company',
                     'Company or organization',
                     icon: Icons.business_outlined,
+                    maxLength: 100,
                   ),
                   _field(
                     'bio',
                     'Short introduction',
                     icon: Icons.notes_rounded,
                     maxLines: 3,
+                    maxLength: 280,
                   ),
                   _field(
                     'email',
@@ -96,17 +104,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     icon: Icons.mail_outline_rounded,
                     keyboardType: TextInputType.emailAddress,
                     validateEmail: true,
+                    maxLength: 254,
                   ),
                   _field(
                     'phone',
                     'Phone number',
                     icon: Icons.call_outlined,
                     keyboardType: TextInputType.phone,
+                    validatePhone: true,
+                    maxLength: 30,
                   ),
                   _field(
                     'location',
                     'Location',
                     icon: Icons.location_on_outlined,
+                    maxLength: 100,
                   ),
                   const SizedBox(height: 8),
                   const SectionHeading(
@@ -120,6 +132,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     icon: Icons.language_rounded,
                     keyboardType: TextInputType.url,
                     validateUrl: true,
+                    maxLength: 256,
                   ),
                   _field(
                     'whatsappNumber',
@@ -127,6 +140,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     icon: Icons.chat_outlined,
                     keyboardType: TextInputType.phone,
                     validatePhone: true,
+                    requireCountryCode: true,
+                    maxLength: 20,
                   ),
                   _field(
                     'facebookUrl',
@@ -134,6 +149,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     icon: Icons.public_rounded,
                     keyboardType: TextInputType.url,
                     validateUrl: true,
+                    maxLength: 256,
                   ),
                   _field(
                     'linkedinUrl',
@@ -141,6 +157,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     icon: Icons.work_outline_rounded,
                     keyboardType: TextInputType.url,
                     validateUrl: true,
+                    maxLength: 256,
                   ),
                   _field(
                     'instagramUrl',
@@ -148,12 +165,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     icon: Icons.camera_alt_outlined,
                     keyboardType: TextInputType.url,
                     validateUrl: true,
+                    maxLength: 256,
                   ),
                   _field(
                     'skills',
                     'Skills, separated by commas',
                     icon: Icons.auto_awesome_outlined,
                     maxLines: 2,
+                    maxLength: 300,
                   ),
                   const SizedBox(height: 10),
                   FilledButton.icon(
@@ -205,15 +224,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     bool validateEmail = false,
     bool validateUrl = false,
     bool validatePhone = false,
+    bool requireCountryCode = false,
     int maxLines = 1,
+    int? maxLength,
     TextInputType? keyboardType,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: TextFormField(
+        key: ValueKey<String>(key),
         controller: _fields[key],
         keyboardType: keyboardType,
         maxLines: maxLines,
+        maxLength: maxLength,
         textCapitalization: validateEmail || validateUrl
             ? TextCapitalization.none
             : TextCapitalization.sentences,
@@ -221,10 +244,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           labelText: label,
           prefixIcon: Icon(icon),
           alignLabelWithHint: maxLines > 1,
+          counterText: '',
         ),
         validator: (value) {
           final text = value?.trim() ?? '';
           if (required && text.isEmpty) return 'This field is required.';
+          if (maxLength != null && text.length > maxLength) {
+            return 'Use no more than $maxLength characters.';
+          }
           if (validateEmail && text.isNotEmpty && !_isValidEmail(text)) {
             return 'Enter a valid email address.';
           }
@@ -233,8 +260,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           }
           if (validatePhone &&
               text.isNotEmpty &&
-              !_isValidInternationalPhone(text)) {
-            return 'Enter a phone number with its country code.';
+              !_isValidPhone(text, requireCountryCode: requireCountryCode)) {
+            return requireCountryCode
+                ? 'Enter a phone number with its country code.'
+                : 'Enter a valid phone number.';
           }
           return null;
         },
@@ -288,10 +317,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);
   }
 
-  bool _isValidInternationalPhone(String value) {
+  bool _isValidPhone(String value, {required bool requireCountryCode}) {
+    final normalized = value.trim();
+    if (!RegExp(r'^\+?[0-9().\s-]+$').hasMatch(normalized)) return false;
+    if (requireCountryCode && !normalized.startsWith('+')) return false;
     final digits = value.replaceAll(RegExp(r'\D'), '');
-    return value.trim().startsWith('+') &&
-        digits.length >= 8 &&
-        digits.length <= 15;
+    return digits.length >= 7 && digits.length <= 15;
   }
 }
