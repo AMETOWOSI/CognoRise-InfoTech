@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart';
 
 import '../data/profile_repository.dart';
@@ -10,6 +12,7 @@ class ProfileController extends ChangeNotifier {
   final ProfileRepository _repository;
   Profile _profile = Profile.sample;
   bool _isLoading = true;
+  bool _hasStartedLoading = false;
   bool _isSaving = false;
   bool _isDisposed = false;
   String? _loadError;
@@ -20,11 +23,25 @@ class ProfileController extends ChangeNotifier {
   String? get loadError => _loadError;
 
   Future<void> load() async {
+    if (_isLoading && _hasStartedLoading) return;
+
+    final isRetry = _hasStartedLoading;
+    _hasStartedLoading = true;
+    _isLoading = true;
+    _loadError = null;
+    if (isRetry) _notifyListeners();
     try {
       final savedProfile = await _repository.load();
       if (savedProfile != null) _profile = savedProfile;
-    } on Exception catch (error) {
-      _loadError = 'Your saved profile could not be loaded: $error';
+    } on Exception catch (error, stackTrace) {
+      developer.log(
+        'Could not load the saved profile.',
+        name: 'digital_visiting_card.profile',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      _loadError =
+          'Your saved profile could not be loaded. Check your device storage and try again.';
     } finally {
       _isLoading = false;
       _notifyListeners();
@@ -33,7 +50,9 @@ class ProfileController extends ChangeNotifier {
 
   Future<void> save(Profile profile) async {
     if (_isDisposed) {
-      throw StateError('Cannot save a profile after the controller is disposed.');
+      throw StateError(
+        'Cannot save a profile after the controller is disposed.',
+      );
     }
     if (_isLoading) {
       throw StateError('Cannot save a profile before loading has completed.');

@@ -8,6 +8,16 @@ This README describes this application only. The project is intended to live at
 `projects/project-01-digital-visiting-card` in the
 [CognoRise-InfoTech repository](https://github.com/AMETOWOSI/CognoRise-InfoTech).
 
+## Application demo
+
+[![Digital Visiting Card home screen with the profile card and contact QR code](assets/digital-visiting-card-preview.jpg)](20261102-2338-44.5209093.mp4)
+
+The [full walkthrough](20261102-2338-44.5209093.mp4) is about 2 minutes and
+5 seconds long. It demonstrates the Home, About, Skills, and Contact screens,
+the QR code, profile editing, optional links, and saving profile changes. The
+video is stored in this project. GitHub does not consistently play repository
+MP4 files inline in a README; select the preview image to open the video.
+
 ## Project status
 
 | Check | Status |
@@ -17,7 +27,8 @@ This README describes this application only. The project is intended to live at
 | Local profile storage | Implemented with `shared_preferences` |
 | Contact QR code | Generated from the current profile as a vCard |
 | Portfolio and social links | Optional and validated before opening |
-| Automated tests | Passed: 16 tests with `flutter test` |
+| Accessibility | Semantics, readable contrast, larger text, and 48 dp targets covered |
+| Automated tests | Passed: 21 tests with `flutter test` |
 | Static analysis | Passed with `flutter analyze` |
 | Android debug build | Passed with `flutter build apk --debug` |
 | Real-device persistence check | Recommended before submission |
@@ -42,6 +53,14 @@ closing and reopening the app.
 
 The application does not include accounts, a backend, or synchronization
 between devices.
+
+## Requirements
+
+- Flutter SDK with a Dart SDK satisfying the constraint in `pubspec.yaml`
+  (`^3.10.1`).
+- Android Studio or Visual Studio Code with the Flutter and Dart extensions.
+- An Android emulator or device for Android development. iOS builds require
+  macOS and Xcode.
 
 ## Security and privacy
 
@@ -128,7 +147,27 @@ or empty URLs are omitted.
 This checks the platform storage implementation in addition to the mocked
 storage used by the automated widget tests.
 
-## How the code is organized
+## Project structure
+
+```text
+.
+├── assets/
+│   ├── digital-visiting-card-preview.jpg
+│   └── fonts/
+├── android/
+├── ios/
+├── linux/
+├── macos/
+├── web/
+├── windows/
+├── 20261102-2338-44.5209093.mp4
+├── pubspec.yaml
+├── README.md
+├── lib/
+└── test/
+```
+
+### Application layers
 
 ```text
 lib/
@@ -182,6 +221,15 @@ formatting out of the UI layer.
 3. `qr_flutter` renders the vCard string as a QR code on the Home screen.
 4. A contact application can scan the code and offer to import its fields.
 
+## Technology
+
+- **Flutter and Dart** provide the application and user interface.
+- **Material 3** supplies the interface components and theming system.
+- **Manrope** is the bundled display font.
+- **JSON** serializes and restores the profile stored on the device.
+- **`flutter_test`** and **`flutter_lints`** support automated checks and
+  consistent Dart style.
+
 ## Dependencies
 
 - [`go_router`](https://pub.dev/packages/go_router) provides declarative
@@ -198,8 +246,9 @@ formatting out of the UI layer.
 ## Tests
 
 The test suite covers profile JSON validation, URL and WhatsApp handling,
-vCard generation, controller loading behavior, screen navigation, narrow
-layouts, and profile editing.
+vCard generation, controller loading and retry behavior, screen navigation,
+accessible labels and touch targets, large text, empty states, narrow layouts,
+and profile editing.
 
 Run the complete suite from the project directory:
 
@@ -217,6 +266,17 @@ the Dart
 Flutter examples, see
 [nisrulz/flutter-examples](https://github.com/nisrulz/flutter-examples). The
 reference repository is not copied or included as a dependency.
+
+## Limitations
+
+- Profile data is stored on one device; accounts, cloud synchronization, and
+  backup are not implemented.
+- `shared_preferences` is not encrypted storage and is intended for small
+  amounts of non-sensitive data.
+- Automated widget tests use an in-memory repository. Verify persistence by
+  closing and reopening the app on a real device.
+- The example Android application ID and release signing are not configured
+  for app-store distribution.
 
 ## License
 

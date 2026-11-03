@@ -13,16 +13,20 @@ class PageScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'Back',
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/');
-            }
-          },
-          icon: const Icon(Icons.arrow_back_rounded),
+        leading: Semantics(
+          label: 'Back',
+          button: true,
+          child: IconButton(
+            tooltip: 'Back',
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/');
+              }
+            },
+            icon: const Icon(Icons.arrow_back_rounded, semanticLabel: 'Back'),
+          ),
         ),
         title: Text(title),
       ),
@@ -65,6 +69,54 @@ class SectionHeading extends StatelessWidget {
             ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
           ),
         ],
+      ],
+    );
+  }
+}
+
+class ProfileEmptyState extends StatelessWidget {
+  const ProfileEmptyState({
+    required this.icon,
+    required this.title,
+    required this.message,
+    required this.actionLabel,
+    required this.onAction,
+    super.key,
+  });
+
+  final IconData icon;
+  final String title;
+  final String message;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: AppColors.purple, size: 28),
+        const SizedBox(height: 12),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: AppColors.ink,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          message,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.muted, height: 1.5),
+        ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: onAction,
+          icon: const Icon(Icons.edit_outlined),
+          label: Text(actionLabel),
+        ),
       ],
     );
   }

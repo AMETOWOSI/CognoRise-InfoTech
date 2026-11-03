@@ -1,11 +1,39 @@
 import 'dart:async';
+import 'dart:math' as math;
 
+import 'package:digital_visiting_card/app/app_colors.dart';
 import 'package:digital_visiting_card/profile/data/profile_repository.dart';
 import 'package:digital_visiting_card/profile/models/profile.dart';
 import 'package:digital_visiting_card/profile/state/profile_controller.dart';
 import 'package:digital_visiting_card/profile/utils/profile_link_utils.dart';
 import 'package:digital_visiting_card/profile/utils/vcard_builder.dart';
+import 'package:flutter/material.dart' show Color, Colors;
 import 'package:flutter_test/flutter_test.dart';
+
+double _contrastRatio(Color first, Color second) {
+  final firstLuminance = _relativeLuminance(first);
+  final secondLuminance = _relativeLuminance(second);
+  final lighter = firstLuminance > secondLuminance
+      ? firstLuminance
+      : secondLuminance;
+  final darker = firstLuminance > secondLuminance
+      ? secondLuminance
+      : firstLuminance;
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+double _relativeLuminance(Color color) {
+  double linearize(int channel) {
+    final value = channel / 255;
+    return value <= 0.04045
+        ? value / 12.92
+        : math.pow((value + 0.055) / 1.055, 2.4).toDouble();
+  }
+
+  return 0.2126 * linearize((color.r * 255).round()) +
+      0.7152 * linearize((color.g * 255).round()) +
+      0.0722 * linearize((color.b * 255).round());
+}
 
 class _DeferredProfileRepository implements ProfileRepository {
   final Completer<Profile?> loadCompleter = Completer<Profile?>();
@@ -17,7 +45,38 @@ class _DeferredProfileRepository implements ProfileRepository {
   Future<void> save(Profile profile) async {}
 }
 
+class _RetryProfileRepository implements ProfileRepository {
+  var shouldFail = true;
+
+  @override
+  Future<Profile?> load() async {
+    if (shouldFail) {
+      shouldFail = false;
+      throw Exception('Storage detail that should not be shown to the user.');
+    }
+    return Profile.sample;
+  }
+
+  @override
+  Future<void> save(Profile profile) async {}
+}
+
 void main() {
+  test('provides readable contrast for the primary text and button colors', () {
+    expect(
+      _contrastRatio(AppColors.muted, AppColors.canvas),
+      greaterThanOrEqualTo(4.5),
+    );
+    expect(
+      _contrastRatio(Colors.white, AppColors.purple),
+      greaterThanOrEqualTo(4.5),
+    );
+    expect(
+      _contrastRatio(AppColors.yellow, AppColors.deepPurple),
+      greaterThanOrEqualTo(4.5),
+    );
+  });
+
   group('profile link helpers', () {
     test('accepts HTTPS URLs and rejects unsafe or malformed URLs', () {
       expect(
@@ -75,6 +134,24 @@ void main() {
   });
 
   group('ProfileController', () {
+    test('can retry loading after a repository failure', () async {
+      final controller = ProfileController(
+        repository: _RetryProfileRepository(),
+      );
+
+      await controller.load();
+      expect(controller.isLoading, isFalse);
+      expect(controller.loadError, isNotNull);
+      expect(controller.loadError, isNot(contains('Storage detail')));
+
+      await controller.load();
+      expect(controller.isLoading, isFalse);
+      expect(controller.loadError, isNull);
+      expect(controller.profile.fullName, 'Ama KWATCHA');
+
+      controller.dispose();
+    });
+
     test('prevents saving before the stored profile has loaded', () async {
       final repository = _DeferredProfileRepository();
       final controller = ProfileController(repository: repository);

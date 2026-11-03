@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -34,9 +36,19 @@ class HomeScreen extends StatelessWidget {
                       isLoading: profileController.isLoading,
                       onEdit: () => context.push('/edit'),
                     ),
+                    if (profileController.isLoading) ...[
+                      const SizedBox(height: 12),
+                      Semantics(
+                        label: 'Loading profile',
+                        child: LinearProgressIndicator(),
+                      ),
+                    ],
                     if (profileController.loadError != null) ...[
                       const SizedBox(height: 16),
-                      _LoadError(message: profileController.loadError!),
+                      _LoadError(
+                        message: profileController.loadError!,
+                        onRetry: () => unawaited(profileController.load()),
+                      ),
                     ],
                     const SizedBox(height: 20),
                     _DigitalCard(
@@ -146,10 +158,17 @@ class _HomeHeader extends StatelessWidget {
             ],
           ),
         ),
-        IconButton.filledTonal(
-          tooltip: 'Edit profile',
-          onPressed: isLoading ? null : onEdit,
-          icon: const Icon(Icons.edit_outlined),
+        Semantics(
+          label: 'Edit profile',
+          button: true,
+          child: IconButton.filledTonal(
+            tooltip: 'Edit profile',
+            onPressed: isLoading ? null : onEdit,
+            icon: const Icon(
+              Icons.edit_outlined,
+              semanticLabel: 'Edit profile',
+            ),
+          ),
         ),
       ],
     );
@@ -413,14 +432,18 @@ class _SocialButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      tooltip: label,
-      onPressed: () => launchExternalLink(context, uri),
-      icon: FaIcon(icon, size: 20),
-      style: IconButton.styleFrom(
-        minimumSize: const Size(48, 48),
-        backgroundColor: Colors.white.withValues(alpha: 0.12),
-        foregroundColor: Colors.white,
+    return Semantics(
+      label: label,
+      button: true,
+      child: IconButton(
+        tooltip: label,
+        onPressed: () => launchExternalLink(context, uri),
+        icon: FaIcon(icon, semanticLabel: label, size: 20),
+        style: IconButton.styleFrom(
+          minimumSize: const Size(48, 48),
+          backgroundColor: Colors.white.withValues(alpha: 0.12),
+          foregroundColor: Colors.white,
+        ),
       ),
     );
   }
@@ -486,6 +509,14 @@ class _QrCard extends StatelessWidget {
                 height: 1.5,
               ),
             ),
+            const SizedBox(height: 10),
+            Text(
+              'Anyone who scans this code can save the profile details and links you have added.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.muted,
+                height: 1.5,
+              ),
+            ),
           ],
         );
         final content = constraints.maxWidth < 380
@@ -537,9 +568,10 @@ class _NavigationButton extends StatelessWidget {
 }
 
 class _LoadError extends StatelessWidget {
-  const _LoadError({required this.message});
+  const _LoadError({required this.message, required this.onRetry});
 
   final String message;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -549,16 +581,31 @@ class _LoadError extends StatelessWidget {
         color: const Color(0xFFFFF3D6),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.warning_amber_rounded, color: AppColors.deepPurple),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(color: AppColors.deepPurple),
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: AppColors.deepPurple,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(color: AppColors.deepPurple),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TextButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Try again'),
+            style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
           ),
         ],
       ),

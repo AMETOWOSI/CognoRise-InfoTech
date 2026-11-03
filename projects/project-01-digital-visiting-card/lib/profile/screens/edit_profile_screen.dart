@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -56,7 +58,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         animation: widget.profileController,
         builder: (context, _) {
           if (widget.profileController.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(
+              child: Semantics(
+                label: 'Loading profile',
+                child: const CircularProgressIndicator(),
+              ),
+            );
           }
           if (!_fieldsInitialized) _syncFieldsFromProfile();
 
@@ -69,7 +76,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 children: [
                   const SectionHeading(
                     title: 'Your details',
-                    subtitle: 'Keep your contact card up to date.',
+                    subtitle:
+                        'Your name is required. Add only the other details you want to share.',
                   ),
                   const SizedBox(height: 20),
                   _field(
@@ -112,6 +120,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     icon: Icons.call_outlined,
                     keyboardType: TextInputType.phone,
                     validatePhone: true,
+                    hintText: '+228 90 00 00 00',
                     maxLength: 30,
                   ),
                   _field(
@@ -123,7 +132,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   const SizedBox(height: 8),
                   const SectionHeading(
                     title: 'Links',
-                    subtitle: 'These fields are optional.',
+                    subtitle: 'Only add links you are comfortable sharing.',
                   ),
                   const SizedBox(height: 14),
                   _field(
@@ -141,6 +150,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     keyboardType: TextInputType.phone,
                     validatePhone: true,
                     requireCountryCode: true,
+                    hintText: '+228 90 00 00 00',
                     maxLength: 20,
                   ),
                   _field(
@@ -227,6 +237,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     bool requireCountryCode = false,
     int maxLines = 1,
     int? maxLength,
+    String? hintText,
     TextInputType? keyboardType,
   }) {
     return Padding(
@@ -242,9 +253,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             : TextCapitalization.sentences,
         decoration: InputDecoration(
           labelText: label,
+          hintText: hintText,
           prefixIcon: Icon(icon),
           alignLabelWithHint: maxLines > 1,
-          counterText: '',
         ),
         validator: (value) {
           final text = value?.trim() ?? '';
@@ -302,10 +313,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         const SnackBar(content: Text('Profile saved on this device.')),
       );
       context.pop();
-    } on Exception catch (error) {
+    } on Exception catch (error, stackTrace) {
+      developer.log(
+        'Could not save the profile.',
+        name: 'digital_visiting_card.profile',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save your profile: $error')),
+        const SnackBar(
+          content: Text(
+            'Your profile could not be saved on this device. Please try again.',
+          ),
+        ),
       );
     }
   }

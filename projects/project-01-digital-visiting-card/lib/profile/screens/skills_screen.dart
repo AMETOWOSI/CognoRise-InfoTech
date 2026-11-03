@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/app_colors.dart';
 import '../state/profile_controller.dart';
@@ -61,7 +62,14 @@ class SkillsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 20),
                       if (skills.isEmpty)
-                        const Text('Add your skills from Edit profile.')
+                        ProfileEmptyState(
+                          icon: Icons.auto_awesome_outlined,
+                          title: 'No skills added yet',
+                          message:
+                              'Add skills to help people understand your experience.',
+                          actionLabel: 'Edit profile',
+                          onAction: () => context.push('/edit'),
+                        )
                       else
                         Wrap(
                           spacing: 10,

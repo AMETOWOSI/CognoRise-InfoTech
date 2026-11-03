@@ -94,6 +94,12 @@ class _MyAppState extends State<MyApp> {
           centerTitle: false,
           surfaceTintColor: Colors.transparent,
         ),
+        iconButtonTheme: IconButtonThemeData(
+          style: IconButton.styleFrom(
+            minimumSize: const Size(48, 48),
+            tapTargetSize: MaterialTapTargetSize.padded,
+          ),
+        ),
         cardTheme: CardThemeData(
           color: Colors.white,
           elevation: 0,
@@ -111,7 +117,7 @@ class _MyAppState extends State<MyApp> {
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFFE8E2EF)),
+            borderSide: const BorderSide(color: AppColors.muted),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/app_colors.dart';
 import '../models/profile.dart';
@@ -37,7 +38,14 @@ class ContactScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       if (links.isEmpty)
-                        const Text('Add contact details from Edit profile.')
+                        ProfileEmptyState(
+                          icon: Icons.contact_mail_outlined,
+                          title: 'No contact details yet',
+                          message:
+                              'Add an email address, phone number, or profile link to make it easier for people to reach you.',
+                          actionLabel: 'Edit profile',
+                          onAction: () => context.push('/edit'),
+                        )
                       else
                         for (var index = 0; index < links.length; index++) ...[
                           if (index > 0) const Divider(height: 20),
