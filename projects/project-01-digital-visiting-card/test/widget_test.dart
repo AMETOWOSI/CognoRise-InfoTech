@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:digital_visiting_card/app/app.dart';
 import 'package:digital_visiting_card/profile/data/profile_repository.dart';
 import 'package:digital_visiting_card/profile/models/profile.dart';
@@ -34,7 +36,66 @@ class _RetryProfileRepository implements ProfileRepository {
   Future<void> save(Profile profile) async {}
 }
 
+class _DeferredProfileRepository implements ProfileRepository {
+  final Completer<Profile?> loadCompleter = Completer<Profile?>();
+
+  @override
+  Future<Profile?> load() => loadCompleter.future;
+
+  @override
+  Future<void> save(Profile profile) async {}
+}
+
 void main() {
+  testWidgets('does not show the sample card while the profile is loading', (
+    tester,
+  ) async {
+    final repository = _DeferredProfileRepository();
+    await tester.pumpWidget(MyApp(repository: repository));
+    await tester.pump();
+
+    expect(find.text('Ama KWATCHA'), findsNothing);
+    expect(find.byType(QrImageView), findsNothing);
+    expect(find.bySemanticsLabel('Loading profile'), findsOneWidget);
+
+    repository.loadCompleter.complete(null);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ama KWATCHA'), findsOneWidget);
+    expect(find.byType(QrImageView), findsOneWidget);
+  });
+
+  testWidgets('does not show the sample profile on an About deep link', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MyApp(repository: _RetryProfileRepository(), initialLocation: '/about'),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ama KWATCHA'), findsNothing);
+    expect(find.text('Try again'), findsOneWidget);
+
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ama KWATCHA'), findsOneWidget);
+    expect(find.text('A little about me'), findsOneWidget);
+  });
+
+  testWidgets('does not allow saving the sample profile after load failure', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MyApp(repository: _RetryProfileRepository(), initialLocation: '/edit'),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ama KWATCHA'), findsNothing);
+    expect(find.text('Save profile'), findsNothing);
+    expect(find.text('Try again'), findsOneWidget);
+  });
+
   testWidgets('shows the profile card and navigates to skills', (tester) async {
     final repository = _MemoryProfileRepository();
     await tester.pumpWidget(MyApp(repository: repository));
@@ -116,6 +177,32 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('home actions meet the 48 dp touch target minimum', (
+    tester,
+  ) async {
+    final repository = _MemoryProfileRepository()
+      ..savedProfile = Profile.sample.copyWith(
+        phone: '+228 90 00 00 00',
+        email: 'ama@example.test',
+        whatsappNumber: '+228 90 00 00 00',
+        facebookUrl: 'https://facebook.example.test/ama',
+      );
+    await tester.pumpWidget(MyApp(repository: repository));
+    await tester.pumpAndSettle();
+
+    for (final finder in [
+      find.byType(OutlinedButton),
+      find.byType(TextButton),
+      find.byType(IconButton),
+    ]) {
+      for (final element in finder.evaluate()) {
+        final size = tester.getSize(find.byWidget(element.widget));
+        expect(size.width, greaterThanOrEqualTo(48));
+        expect(size.height, greaterThanOrEqualTo(48));
+      }
+    }
+  });
+
   testWidgets('offers a retry when saved profile loading fails', (
     tester,
   ) async {
@@ -124,6 +211,8 @@ void main() {
 
     expect(find.text('Your saved profile could not be loaded.'), findsNothing);
     expect(find.text('Try again'), findsOneWidget);
+    expect(find.text('Ama KWATCHA'), findsNothing);
+    expect(find.byType(QrImageView), findsNothing);
 
     await tester.tap(find.text('Try again'));
     await tester.pumpAndSettle();
@@ -236,6 +325,22 @@ void main() {
 
     await tester.scrollUntilVisible(nameField, -280, scrollable: formScroll);
     await tester.enterText(nameField, 'Ama KWATCHA');
+    final emailField = find.byKey(const ValueKey<String>('email'));
+    await tester.scrollUntilVisible(emailField, 280, scrollable: formScroll);
+    await tester.enterText(emailField, 'person@example..test');
+    await tester.scrollUntilVisible(
+      find.text('Save profile'),
+      280,
+      scrollable: formScroll,
+    );
+    await tester.tap(find.text('Save profile'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enter a valid email address.'), findsOneWidget);
+    expect(repository.savedProfile, isNull);
+
+    await tester.scrollUntilVisible(emailField, -280, scrollable: formScroll);
+    await tester.enterText(emailField, 'ama@example.test');
     final phoneField = find.byKey(const ValueKey<String>('phone'));
     await tester.scrollUntilVisible(phoneField, 280, scrollable: formScroll);
     await tester.enterText(phoneField, '+228 90 00 ABC');

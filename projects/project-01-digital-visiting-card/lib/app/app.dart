@@ -13,9 +13,10 @@ import '../profile/screens/skills_screen.dart';
 import '../profile/state/profile_controller.dart';
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key, this.repository});
+  const MyApp({super.key, this.repository, this.initialLocation = '/'});
 
   final ProfileRepository? repository;
+  final String initialLocation;
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -33,7 +34,7 @@ class _MyAppState extends State<MyApp> {
     );
     unawaited(_profileController.load());
     _router = GoRouter(
-      initialLocation: '/',
+      initialLocation: widget.initialLocation,
       routes: [
         GoRoute(
           path: '/',

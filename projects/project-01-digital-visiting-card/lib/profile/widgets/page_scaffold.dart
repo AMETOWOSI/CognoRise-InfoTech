@@ -121,3 +121,70 @@ class ProfileEmptyState extends StatelessWidget {
     );
   }
 }
+
+class ProfileStatusView extends StatelessWidget {
+  const ProfileStatusView({
+    required this.isLoading,
+    required this.onRetry,
+    this.errorMessage,
+    super.key,
+  });
+
+  final bool isLoading;
+  final String? errorMessage;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return Center(
+        child: Semantics(
+          label: 'Loading profile',
+          child: const CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF3D6),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: AppColors.deepPurple,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      errorMessage ?? 'Your profile could not be loaded.',
+                      style: const TextStyle(color: AppColors.deepPurple),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Try again'),
+                style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -11,6 +11,7 @@ import '../state/profile_controller.dart';
 import '../utils/external_launcher.dart';
 import '../utils/profile_link_utils.dart';
 import '../utils/vcard_builder.dart';
+import '../widgets/page_scaffold.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({required this.profileController, super.key});
@@ -24,6 +25,43 @@ class HomeScreen extends StatelessWidget {
       builder: (context, _) {
         final profile = profileController.profile;
 
+        if (profileController.isLoading) {
+          return Scaffold(
+            body: SafeArea(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: ProfileStatusView(
+                    isLoading: true,
+                    onRetry: () => unawaited(profileController.load()),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final loadError = profileController.loadError;
+        if (loadError != null) {
+          return Scaffold(
+            body: SafeArea(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: ProfileStatusView(
+                      isLoading: false,
+                      errorMessage: loadError,
+                      onRetry: () => unawaited(profileController.load()),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
         return Scaffold(
           body: SafeArea(
             child: Center(
@@ -32,24 +70,7 @@ class HomeScreen extends StatelessWidget {
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
                   children: [
-                    _HomeHeader(
-                      isLoading: profileController.isLoading,
-                      onEdit: () => context.push('/edit'),
-                    ),
-                    if (profileController.isLoading) ...[
-                      const SizedBox(height: 12),
-                      Semantics(
-                        label: 'Loading profile',
-                        child: LinearProgressIndicator(),
-                      ),
-                    ],
-                    if (profileController.loadError != null) ...[
-                      const SizedBox(height: 16),
-                      _LoadError(
-                        message: profileController.loadError!,
-                        onRetry: () => unawaited(profileController.load()),
-                      ),
-                    ],
+                    _HomeHeader(onEdit: () => context.push('/edit')),
                     const SizedBox(height: 20),
                     _DigitalCard(
                       profile: profile,
@@ -115,9 +136,8 @@ class HomeScreen extends StatelessWidget {
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.isLoading, required this.onEdit});
+  const _HomeHeader({required this.onEdit});
 
-  final bool isLoading;
   final VoidCallback onEdit;
 
   @override
@@ -163,7 +183,7 @@ class _HomeHeader extends StatelessWidget {
           button: true,
           child: IconButton.filledTonal(
             tooltip: 'Edit profile',
-            onPressed: isLoading ? null : onEdit,
+            onPressed: onEdit,
             icon: const Icon(
               Icons.edit_outlined,
               semanticLabel: 'Edit profile',
@@ -357,6 +377,7 @@ class _CardContactChip extends StatelessWidget {
         icon: Icon(icon, size: 18),
         label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
         style: TextButton.styleFrom(
+          minimumSize: const Size(48, 48),
           backgroundColor: Colors.white.withValues(alpha: 0.12),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -558,56 +579,11 @@ class _NavigationButton extends StatelessWidget {
       icon: Icon(icon, size: 18),
       label: Text(label),
       style: OutlinedButton.styleFrom(
+        minimumSize: const Size(48, 48),
         foregroundColor: AppColors.purple,
         side: const BorderSide(color: Color(0xFFE3DCEB)),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      ),
-    );
-  }
-}
-
-class _LoadError extends StatelessWidget {
-  const _LoadError({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF3D6),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(
-                Icons.warning_amber_rounded,
-                color: AppColors.deepPurple,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  message,
-                  style: const TextStyle(color: AppColors.deepPurple),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          TextButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Try again'),
-            style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-          ),
-        ],
       ),
     );
   }

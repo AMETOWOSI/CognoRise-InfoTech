@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
@@ -58,11 +59,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         animation: widget.profileController,
         builder: (context, _) {
           if (widget.profileController.isLoading) {
-            return Center(
-              child: Semantics(
-                label: 'Loading profile',
-                child: const CircularProgressIndicator(),
-              ),
+            return ProfileStatusView(
+              isLoading: true,
+              onRetry: () => unawaited(widget.profileController.load()),
+            );
+          }
+          if (widget.profileController.loadError != null) {
+            return ProfileStatusView(
+              isLoading: false,
+              errorMessage: widget.profileController.loadError,
+              onRetry: () => unawaited(widget.profileController.load()),
             );
           }
           if (!_fieldsInitialized) _syncFieldsFromProfile();
@@ -263,7 +269,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           if (maxLength != null && text.length > maxLength) {
             return 'Use no more than $maxLength characters.';
           }
-          if (validateEmail && text.isNotEmpty && !_isValidEmail(text)) {
+          if (validateEmail && text.isNotEmpty && !isValidEmailAddress(text)) {
             return 'Enter a valid email address.';
           }
           if (validateUrl && text.isNotEmpty && profileWebUri(text) == null) {
@@ -332,11 +338,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   String _value(String key) => _fields[key]!.text.trim();
-
-  bool _isValidEmail(String value) {
-    return value.length <= 254 &&
-        RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);
-  }
 
   bool _isValidPhone(String value, {required bool requireCountryCode}) {
     final normalized = value.trim();

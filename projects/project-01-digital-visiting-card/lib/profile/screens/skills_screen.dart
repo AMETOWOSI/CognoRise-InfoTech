@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,6 +17,18 @@ class SkillsScreen extends StatelessWidget {
     return AnimatedBuilder(
       animation: profileController,
       builder: (context, _) {
+        if (profileController.isLoading ||
+            profileController.loadError != null) {
+          return PageScaffold(
+            title: 'Skills',
+            child: ProfileStatusView(
+              isLoading: profileController.isLoading,
+              errorMessage: profileController.loadError,
+              onRetry: () => unawaited(profileController.load()),
+            ),
+          );
+        }
+
         final skills = profileController.profile.skills;
         return PageScaffold(
           title: 'Skills',

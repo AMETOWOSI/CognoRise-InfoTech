@@ -28,7 +28,7 @@ MP4 files inline in a README; select the preview image to open the video.
 | Contact QR code | Generated from the current profile as a vCard |
 | Portfolio and social links | Optional and validated before opening |
 | Accessibility | Semantics, readable contrast, larger text, and 48 dp targets covered |
-| Automated tests | Passed: 21 tests with `flutter test` |
+| Automated tests | Passed: 26 tests with `flutter test` |
 | Static analysis | Passed with `flutter analyze` |
 | Android debug build | Passed with `flutter build apk --debug` |
 | Real-device persistence check | Recommended before submission |
@@ -75,13 +75,12 @@ and valid portfolio or social URLs. Review those fields before sharing the QR
 code. The starter profile leaves personal contact details and social URLs blank
 so that no unverified information is published.
 
-A static security review did not identify a verified exploitable vulnerability
-in the reviewed application code and platform configuration. A query of the
-56 resolved Dart package versions against the OSV advisory database returned
-no known advisories on 2026-10-23. These checks are not a guarantee of
-security; review dependency advisories and release settings again before
-publishing. Dart's installed `pub` command does not provide a `pub audit`
-subcommand.
+A previous static security review did not identify a verified exploitable
+vulnerability in the reviewed application code and platform configuration. A
+query of 56 resolved Dart package versions against the OSV advisory database
+returned no known advisories on 2026-10-23. This is a historical, point-in-time
+check, not a current security certification. Review current dependency
+advisories and release settings before publishing.
 
 Android debug builds remain available for development. A release signing key
 is deliberately not included in this repository. Configure a private
@@ -245,10 +244,11 @@ formatting out of the UI layer.
 
 ## Tests
 
-The test suite covers profile JSON validation, URL and WhatsApp handling,
-vCard generation, controller loading and retry behavior, screen navigation,
-accessible labels and touch targets, large text, empty states, narrow layouts,
-and profile editing.
+The test suite covers profile JSON validation, email and URL validation,
+WhatsApp handling, vCard generation, controller loading and retry behavior,
+safe profile display on direct routes, screen navigation, accessible labels
+and touch targets, large text, empty states, narrow layouts, and profile
+editing.
 
 Run the complete suite from the project directory:
 

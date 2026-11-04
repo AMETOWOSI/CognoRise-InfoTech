@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -19,6 +21,18 @@ class ContactScreen extends StatelessWidget {
     return AnimatedBuilder(
       animation: profileController,
       builder: (context, _) {
+        if (profileController.isLoading ||
+            profileController.loadError != null) {
+          return PageScaffold(
+            title: 'Contact',
+            child: ProfileStatusView(
+              isLoading: profileController.isLoading,
+              errorMessage: profileController.loadError,
+              onRetry: () => unawaited(profileController.load()),
+            ),
+          );
+        }
+
         final profile = profileController.profile;
         final links = _contactLinks(context, profile);
 

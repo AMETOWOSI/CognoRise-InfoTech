@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../app/app_colors.dart';
@@ -14,6 +16,18 @@ class AboutScreen extends StatelessWidget {
     return AnimatedBuilder(
       animation: profileController,
       builder: (context, _) {
+        if (profileController.isLoading ||
+            profileController.loadError != null) {
+          return PageScaffold(
+            title: 'About',
+            child: ProfileStatusView(
+              isLoading: profileController.isLoading,
+              errorMessage: profileController.loadError,
+              onRetry: () => unawaited(profileController.load()),
+            ),
+          );
+        }
+
         final profile = profileController.profile;
         return PageScaffold(
           title: 'About',

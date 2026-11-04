@@ -78,6 +78,26 @@ void main() {
   });
 
   group('profile link helpers', () {
+    test(
+      'validates common email addresses and rejects malformed addresses',
+      () {
+        for (final email in ['ama@example.test', 'first.last+tag@example.co']) {
+          expect(isValidEmailAddress(email), isTrue, reason: email);
+        }
+
+        for (final email in [
+          'person..name@example.test',
+          'person@example..test',
+          'person@-example.test',
+          'person@example-.test',
+          'person@example',
+          'person@@example.test',
+        ]) {
+          expect(isValidEmailAddress(email), isFalse, reason: email);
+        }
+      },
+    );
+
     test('accepts HTTPS URLs and rejects unsafe or malformed URLs', () {
       expect(
         profileWebUri('https://example.com'),
