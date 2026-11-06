@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.example.project_06_notes_app_cloud_sync_ai_chatbot",
+      "sha256_cert_fingerprints": [
+        "B4:EA:21:B2:A9:20:F9:E6:03:E2:C5:EE:E7:1F:6F:50:47:D3:C1:F7:95:96:B0:6C:C5:1E:6C:54:54:88:CB:EC"
+      ]
+    }
+  }
+]

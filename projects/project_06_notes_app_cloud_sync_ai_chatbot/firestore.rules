@@ -1,0 +1,215 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/notes/{noteId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function validNote() {
+        return request.resource.data.keys().hasAll([
+            'title',
+            'content',
+            'createdAt',
+            'updatedAt'
+          ])
+          && request.resource.data.keys().hasOnly([
+            'title',
+            'content',
+            'createdAt',
+            'updatedAt'
+          ])
+          && request.resource.data.title is string
+          && request.resource.data.title.size() > 0
+          && request.resource.data.title.size() <= 120
+          && request.resource.data.content is string
+          && request.resource.data.content.size() <= 20000;
+      }
+
+      allow read: if isOwner();
+      allow create: if isOwner()
+        && validNote()
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow update: if isOwner()
+        && validNote()
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isOwner();
+    }
+
+    match /users/{userId}/chats/{chatId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function validConversation() {
+        return request.resource.data.keys().hasAll([
+            'title',
+            'createdAt',
+            'updatedAt'
+          ])
+          && request.resource.data.keys().hasOnly([
+            'title',
+            'createdAt',
+            'updatedAt',
+            'shareId'
+          ])
+          && request.resource.data.title is string
+          && request.resource.data.title.size() > 0
+          && request.resource.data.title.size() <= 60
+          && request.resource.data.createdAt is timestamp
+          && request.resource.data.updatedAt is timestamp
+          && (!request.resource.data.keys().hasAny(['shareId'])
+            || request.resource.data.shareId is string
+              && request.resource.data.shareId.size() == 20);
+      }
+
+      allow read: if isOwner();
+      allow create: if isOwner()
+        && validConversation()
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow update: if isOwner()
+        && validConversation()
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isOwner();
+
+      match /messages/{messageId} {
+        function isOwner() {
+          return request.auth != null && request.auth.uid == userId;
+        }
+
+        function validMessage() {
+          return request.resource.data.keys().hasAll([
+              'role',
+              'text',
+              'createdAt'
+            ])
+            && request.resource.data.keys().hasOnly([
+              'role',
+              'text',
+              'createdAt'
+            ])
+            && request.resource.data.role in ['user', 'assistant']
+            && request.resource.data.text is string
+            && request.resource.data.text.size() > 0
+            && request.resource.data.text.size() <= 20000
+            && request.resource.data.createdAt is timestamp;
+        }
+
+        allow read: if isOwner();
+        allow create: if isOwner()
+          && validMessage()
+          && request.resource.data.createdAt == request.time;
+        allow update: if false;
+        allow delete: if isOwner();
+      }
+    }
+
+    match /sharedChats/{shareId} {
+      function isShareOwner() {
+        return request.auth != null
+          && resource.data.ownerUid == request.auth.uid;
+      }
+
+      function isShareActive() {
+        return !resource.data.keys().hasAny(['revoked']);
+      }
+
+      function validSharedChat() {
+        return request.resource.data.keys().hasAll([
+            'ownerUid',
+            'title',
+            'createdAt'
+          ])
+          && request.resource.data.keys().hasOnly([
+            'ownerUid',
+            'title',
+            'createdAt'
+          ])
+          && request.resource.data.ownerUid is string
+          && request.resource.data.ownerUid == request.auth.uid
+          && request.resource.data.title is string
+          && request.resource.data.title.size() > 0
+          && request.resource.data.title.size() <= 80
+          && request.resource.data.createdAt == request.time;
+      }
+
+      function isRevokingSharedChat() {
+        return isShareOwner()
+          && !resource.data.keys().hasAny(['revoked'])
+          && request.resource.data.keys().hasAll([
+            'ownerUid',
+            'title',
+            'createdAt',
+            'revoked'
+          ])
+          && request.resource.data.keys().hasOnly([
+            'ownerUid',
+            'title',
+            'createdAt',
+            'revoked'
+          ])
+          && request.resource.data.ownerUid == resource.data.ownerUid
+          && request.resource.data.title == resource.data.title
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.revoked == true;
+      }
+
+      allow get: if isShareActive() || isShareOwner();
+      allow list: if false;
+      allow create: if request.auth != null && validSharedChat();
+      allow update: if isRevokingSharedChat();
+      allow delete: if isShareOwner();
+
+      match /messages/{messageId} {
+        function parentExists() {
+          return exists(
+            /databases/$(database)/documents/sharedChats/$(shareId)
+          );
+        }
+
+        function isShareOwner() {
+          return request.auth != null
+            && parentExists()
+            && get(
+              /databases/$(database)/documents/sharedChats/$(shareId)
+            ).data.ownerUid == request.auth.uid;
+        }
+
+        function validSharedMessage() {
+          return request.resource.data.keys().hasAll([
+              'role',
+              'text',
+              'createdAt'
+            ])
+            && request.resource.data.keys().hasOnly([
+              'role',
+              'text',
+              'createdAt'
+            ])
+            && request.resource.data.role in ['user', 'assistant']
+            && request.resource.data.text is string
+            && request.resource.data.text.size() > 0
+            && request.resource.data.text.size() <= 20000
+            && request.resource.data.createdAt is timestamp
+            && request.resource.data.createdAt <= request.time;
+        }
+
+        allow get, list: if parentExists()
+          && (
+            !get(
+              /databases/$(database)/documents/sharedChats/$(shareId)
+            ).data.keys().hasAny(['revoked'])
+            || isShareOwner()
+          );
+        allow create: if isShareOwner() && validSharedMessage();
+        allow update: if false;
+        allow delete: if isShareOwner();
+      }
+    }
+  }
+}
