@@ -256,8 +256,9 @@ class ChatProvider extends ChangeNotifier {
       'Firebase AI Logic denied this request. In Firebase Console, confirm '
       'that Firebase AI Logic and the Gemini Developer API are enabled, then '
       'check Security > App Check > APIs for Firebase AI Logic. A debug build '
-      'needs this device’s debug token registered; a release build needs Play '
-      'Integrity configured for this Android app. This is separate from '
+      'needs its own device debug token registered. For users, configure Play '
+      'Integrity and distribute the signed release through Google Play; a '
+      'sideloaded build might not pass attestation. This is separate from '
       'Firestore rules.';
 
   void _reportError(Object error, StackTrace stackTrace) {

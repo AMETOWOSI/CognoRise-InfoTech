@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart'
     show FirebaseAuthException, User;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
+import '../services/profile_photo_service.dart';
 import '../services/note_reminder_service.dart';
 import '../theme/app_theme.dart';
 import 'account_info_screen.dart';
@@ -15,10 +18,12 @@ class NotesHomeScreen extends StatefulWidget {
     super.key,
     required this.user,
     required this.reminderService,
+    this.profilePhotoService,
   });
 
   final User user;
   final NoteReminderService reminderService;
+  final ProfilePhotoService? profilePhotoService;
 
   @override
   State<NotesHomeScreen> createState() => _NotesHomeScreenState();
@@ -26,6 +31,48 @@ class NotesHomeScreen extends StatefulWidget {
 
 class _NotesHomeScreenState extends State<NotesHomeScreen> {
   int _selectedIndex = 0;
+  late final ProfilePhotoService _profilePhotoService =
+      widget.profilePhotoService ?? LocalProfilePhotoService();
+  String? _profilePhotoPath;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadProfilePhoto());
+  }
+
+  @override
+  void didUpdateWidget(covariant NotesHomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.user.uid != widget.user.uid) {
+      _profilePhotoPath = null;
+      unawaited(_loadProfilePhoto());
+    }
+  }
+
+  Future<void> _loadProfilePhoto() async {
+    try {
+      final path = await _profilePhotoService.loadLocalPhoto(widget.user.uid);
+      if (mounted) setState(() => _profilePhotoPath = path);
+    } on Exception catch (error, stackTrace) {
+      _reportProfilePhotoError(error, stackTrace);
+    }
+  }
+
+  void _reportProfilePhotoError(Object error, StackTrace stackTrace) {
+    FlutterError.reportError(
+      FlutterErrorDetails(
+        exception: error,
+        stack: stackTrace,
+        library: 'account',
+        context: ErrorDescription('while loading the local profile photo'),
+      ),
+    );
+  }
+
+  void _onProfilePhotoChanged(String? path) {
+    if (mounted) setState(() => _profilePhotoPath = path);
+  }
 
   Future<void> _signOut() async {
     try {
@@ -62,7 +109,11 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
   void _openAccountInfo() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => AccountInfoScreen(onSignOut: _signOut),
+        builder: (_) => AccountInfoScreen(
+          onSignOut: _signOut,
+          profilePhotoService: _profilePhotoService,
+          onProfilePhotoChanged: _onProfilePhotoChanged,
+        ),
       ),
     );
   }
@@ -101,7 +152,7 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
               NotesScreen(
                 userName: user.displayName,
                 userEmail: user.email,
-                userPhotoUrl: user.photoURL,
+                userPhotoPath: _profilePhotoPath,
                 userId: user.uid,
                 reminderService: widget.reminderService,
                 onAccountTap: _openAccountInfo,

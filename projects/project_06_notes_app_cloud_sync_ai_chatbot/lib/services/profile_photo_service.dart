@@ -1,45 +1,52 @@
+import 'dart:convert';
 import 'dart:io';
 
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 abstract interface class ProfilePhotoService {
-  Future<String?> pickAndUpload(String userId);
+  Future<String?> loadLocalPhoto(String userId);
+
+  Future<String?> pickAndSave(String userId);
 
   Future<void> delete(String userId);
 }
 
-class FirebaseProfilePhotoService implements ProfilePhotoService {
-  FirebaseProfilePhotoService({
-    FirebaseAuth? auth,
-    FirebaseStorage? storage,
+class LocalProfilePhotoService implements ProfilePhotoService {
+  LocalProfilePhotoService({
     ImagePicker? imagePicker,
-  }) : _auth = auth ?? FirebaseAuth.instance,
-       _storage = storage ?? FirebaseStorage.instance,
-       _imagePicker = imagePicker ?? ImagePicker();
+    Future<Directory> Function()? supportDirectoryProvider,
+  }) : _imagePicker = imagePicker ?? ImagePicker(),
+       _supportDirectoryProvider =
+           supportDirectoryProvider ?? getApplicationSupportDirectory;
 
   static const _maxPhotoBytes = 5 * 1024 * 1024;
 
-  final FirebaseAuth _auth;
-  final FirebaseStorage _storage;
   final ImagePicker _imagePicker;
+  final Future<Directory> Function() _supportDirectoryProvider;
 
   @override
-  Future<String?> pickAndUpload(String userId) async {
+  Future<String?> loadLocalPhoto(String userId) async {
+    final file = File(await _photoPath(userId));
+    return await file.exists() ? file.path : null;
+  }
+
+  @override
+  Future<String?> pickAndSave(String userId) async {
     final selected = await _imagePicker.pickImage(
       source: ImageSource.gallery,
-      maxWidth: 1200,
-      maxHeight: 1200,
-      imageQuality: 85,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 80,
     );
     if (selected == null) return null;
 
-    final user = _requireOwner(userId);
     final file = File(selected.path);
     final size = await file.length();
     if (size == 0 || size > _maxPhotoBytes) {
-      throw const ProfilePhotoException('Choose an image smaller than 5 MB.');
+      throw const ProfilePhotoException(
+        'Choose a non-empty image smaller than 5 MB.',
+      );
     }
 
     final contentType = selected.mimeType ?? 'image/jpeg';
@@ -47,32 +54,30 @@ class FirebaseProfilePhotoService implements ProfilePhotoService {
       throw const ProfilePhotoException('Choose a supported image file.');
     }
 
-    final reference = _photoReference(userId);
-    await reference.putFile(file, SettableMetadata(contentType: contentType));
-    final downloadUrl = await reference.getDownloadURL();
-    await user.updatePhotoURL(downloadUrl);
-    await user.reload();
-    return downloadUrl;
+    final path = await _photoPath(userId);
+    await File(path).parent.create(recursive: true);
+    await selected.saveTo(path);
+    return path;
   }
 
   @override
   Future<void> delete(String userId) async {
-    final user = _requireOwner(userId);
-    await _photoReference(userId).delete();
-    await user.updatePhotoURL(null);
-    await user.reload();
+    final file = File(await _photoPath(userId));
+    if (await file.exists()) await file.delete();
   }
 
-  User _requireOwner(String userId) {
-    final user = _auth.currentUser;
-    if (user == null || user.uid != userId) {
-      throw StateError('A signed-in owner is required to manage this photo.');
+  Future<String> _photoPath(String userId) async {
+    if (userId.isEmpty) {
+      throw ArgumentError.value(userId, 'userId', 'Invalid account ID.');
     }
-    return user;
+    final directory = await _supportDirectoryProvider();
+    final accountKey = base64Url
+        .encode(utf8.encode(userId))
+        .replaceAll('=', '');
+    return '${directory.path}${Platform.pathSeparator}profile_photos'
+        '${Platform.pathSeparator}$accountKey'
+        '${Platform.pathSeparator}avatar';
   }
-
-  Reference _photoReference(String userId) =>
-      _storage.ref('users/$userId/profile/avatar');
 }
 
 class ProfilePhotoException implements Exception {

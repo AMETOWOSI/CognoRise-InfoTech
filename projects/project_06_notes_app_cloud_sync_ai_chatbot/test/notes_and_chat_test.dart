@@ -21,6 +21,7 @@ import 'package:project_06_notes_app_cloud_sync_ai_chatbot/services/chat_history
 import 'package:project_06_notes_app_cloud_sync_ai_chatbot/services/chat_share_links.dart';
 import 'package:project_06_notes_app_cloud_sync_ai_chatbot/services/note_reminder_service.dart';
 import 'package:project_06_notes_app_cloud_sync_ai_chatbot/services/notes_service.dart';
+import 'package:project_06_notes_app_cloud_sync_ai_chatbot/services/profile_photo_service.dart';
 import 'package:project_06_notes_app_cloud_sync_ai_chatbot/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 
@@ -30,14 +31,17 @@ void main() {
   ) async {
     final service = _FakeNotesService();
     addTearDown(service.dispose);
-    await tester.pumpWidget(
-      _notesApp(service, userPhotoUrl: 'https://example.com/avatar.jpg'),
-    );
+    await tester.pumpWidget(_notesApp(service, userPhotoPath: '/local/avatar'));
 
     final image = tester.widget<Image>(
       find.byKey(const Key('homeProfilePhotoImage')),
     );
-    expect((image.image as NetworkImage).url, 'https://example.com/avatar.jpg');
+    expect(image.image, isA<FileImage>());
+    expect((image.image as FileImage).file.path, '/local/avatar');
+    expect(
+      tester.getTopLeft(find.byKey(const Key('homeProfilePhotoImage'))).dy,
+      lessThan(tester.getTopLeft(find.text('Notes User')).dy),
+    );
     expect(find.byKey(const Key('homeProfilePhoto')), findsOneWidget);
   });
 
@@ -361,7 +365,7 @@ void main() {
 Widget _notesApp(
   NotesService service, {
   _FakeNoteReminderService? reminderService,
-  String? userPhotoUrl,
+  String? userPhotoPath,
 }) {
   final reminders = reminderService ?? _FakeNoteReminderService();
   return MaterialApp(
@@ -375,7 +379,7 @@ Widget _notesApp(
       child: NotesScreen(
         userName: 'Notes User',
         userEmail: 'notes@example.com',
-        userPhotoUrl: userPhotoUrl,
+        userPhotoPath: userPhotoPath,
         userId: 'test-user',
         reminderService: reminders,
         onAccountTap: _noop,
@@ -420,9 +424,24 @@ Widget _homeApp(_FakeNotesService notesService) {
     ],
     child: MaterialApp(
       theme: AppTheme.light,
-      home: NotesHomeScreen(user: user, reminderService: reminders),
+      home: NotesHomeScreen(
+        user: user,
+        reminderService: reminders,
+        profilePhotoService: _FakeProfilePhotoService(),
+      ),
     ),
   );
+}
+
+class _FakeProfilePhotoService implements ProfilePhotoService {
+  @override
+  Future<void> delete(String userId) async {}
+
+  @override
+  Future<String?> loadLocalPhoto(String userId) async => null;
+
+  @override
+  Future<String?> pickAndSave(String userId) async => null;
 }
 
 void _noop() {}

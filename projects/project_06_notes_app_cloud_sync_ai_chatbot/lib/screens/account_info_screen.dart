@@ -1,6 +1,8 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart'
     show FirebaseAuthException, User;
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,10 +19,12 @@ class AccountInfoScreen extends StatefulWidget {
     super.key,
     required this.onSignOut,
     this.profilePhotoService,
+    this.onProfilePhotoChanged,
   });
 
   final Future<void> Function() onSignOut;
   final ProfilePhotoService? profilePhotoService;
+  final ValueChanged<String?>? onProfilePhotoChanged;
 
   @override
   State<AccountInfoScreen> createState() => _AccountInfoScreenState();
@@ -40,10 +44,10 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
   bool _isUpdatingPassword = false;
   bool _isSelectingPhoto = false;
   bool _hasInitializedFields = false;
-  String? _profilePhotoUrl;
+  String? _profilePhotoPath;
 
   ProfilePhotoService get _photoService =>
-      widget.profilePhotoService ?? FirebaseProfilePhotoService();
+      widget.profilePhotoService ?? LocalProfilePhotoService();
 
   @override
   void dispose() {
@@ -60,36 +64,36 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
     _hasInitializedFields = true;
     _displayNameController.text = user.displayName ?? '';
     _emailController.text = user.email ?? '';
-    _profilePhotoUrl = user.photoURL;
+    unawaited(_loadLocalPhoto(user.uid));
+  }
+
+  Future<void> _loadLocalPhoto(String userId) async {
+    try {
+      final path = await _photoService.loadLocalPhoto(userId);
+      if (mounted) setState(() => _profilePhotoPath = path);
+    } on Exception catch (error, stackTrace) {
+      _reportError(error, stackTrace, 'loading the local profile photo');
+    }
   }
 
   Future<void> _selectProfilePhoto(String userId) async {
     if (_isSelectingPhoto) return;
-    final authProvider = context.read<AuthProvider>();
     setState(() => _isSelectingPhoto = true);
     try {
-      final url = await _photoService.pickAndUpload(userId);
-      if (url != null) {
-        authProvider.refreshUser();
+      final path = await _photoService.pickAndSave(userId);
+      if (path != null) {
+        widget.onProfilePhotoChanged?.call(path);
         if (mounted) {
-          setState(() => _profilePhotoUrl = url);
-          _showMessage('Your profile photo is saved to your account.');
+          setState(() => _profilePhotoPath = path);
+          _showMessage('Your profile photo is saved on this device.');
         }
-      }
-    } on FirebaseException catch (error, stackTrace) {
-      _reportError(error, stackTrace, 'uploading the profile photo');
-      if (mounted) {
-        _showMessage(
-          'Could not upload your profile photo (${error.code}). '
-          'Check that Firebase Storage is enabled and its rules are deployed.',
-        );
       }
     } on ProfilePhotoException catch (error, stackTrace) {
       _reportError(error, stackTrace, 'validating the profile photo');
       if (mounted) _showMessage(error.message);
     } on Exception catch (error, stackTrace) {
-      _reportError(error, stackTrace, 'uploading the profile photo');
-      if (mounted) _showMessage('Could not upload your profile photo.');
+      _reportError(error, stackTrace, 'saving the profile photo locally');
+      if (mounted) _showMessage('Could not save your profile photo.');
     } finally {
       if (mounted) setState(() => _isSelectingPhoto = false);
     }
@@ -101,7 +105,8 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Remove profile photo?'),
         content: const Text(
-          'This removes your profile photo from your account on all devices.',
+          'This removes the profile photo saved on this device. Photos on '
+          'other devices are not affected.',
         ),
         actions: [
           TextButton(
@@ -116,25 +121,16 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
       ),
     );
     if (shouldRemove != true || !mounted) return;
-    final authProvider = context.read<AuthProvider>();
 
     try {
       await _photoService.delete(userId);
-      authProvider.refreshUser();
+      widget.onProfilePhotoChanged?.call(null);
       if (mounted) {
-        setState(() => _profilePhotoUrl = null);
-        _showMessage('Your profile photo was removed from your account.');
-      }
-    } on FirebaseException catch (error, stackTrace) {
-      _reportError(error, stackTrace, 'removing the profile photo');
-      if (mounted) {
-        _showMessage(
-          'Could not remove your profile photo (${error.code}). '
-          'Check your connection and Firebase Storage rules.',
-        );
+        setState(() => _profilePhotoPath = null);
+        _showMessage('Your profile photo was removed from this device.');
       }
     } on Exception catch (error, stackTrace) {
-      _reportError(error, stackTrace, 'removing the profile photo');
+      _reportError(error, stackTrace, 'removing the local profile photo');
       if (mounted) _showMessage('Could not remove your profile photo.');
     }
   }
@@ -342,15 +338,15 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
           CircleAvatar(
             radius: 42,
             backgroundColor: AppColors.blue.withValues(alpha: 0.12),
-            child: _profilePhotoUrl == null
+            child: _profilePhotoPath == null
                 ? const Icon(
                     Icons.account_circle_outlined,
                     size: 52,
                     color: AppColors.blue,
                   )
                 : ClipOval(
-                    child: Image.network(
-                      _profilePhotoUrl!,
+                    child: Image.file(
+                      File(_profilePhotoPath!),
                       width: 84,
                       height: 84,
                       fit: BoxFit.cover,
@@ -391,12 +387,12 @@ class _AccountInfoScreenState extends State<AccountInfoScreen> {
                   )
                 : const Icon(Icons.add_a_photo_outlined),
             label: Text(
-              _profilePhotoUrl == null
+              _profilePhotoPath == null
                   ? 'Add profile photo'
                   : 'Change profile photo',
             ),
           ),
-          if (_profilePhotoUrl != null)
+          if (_profilePhotoPath != null)
             TextButton(
               key: const Key('removeProfilePhotoButton'),
               onPressed: _isSelectingPhoto

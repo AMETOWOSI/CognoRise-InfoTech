@@ -27,7 +27,9 @@ void main() {
     expect(find.text('Your profile has been updated.'), findsOneWidget);
   });
 
-  testWidgets('uploads and shows the account profile photo', (tester) async {
+  testWidgets('saves and shows the local account profile photo', (
+    tester,
+  ) async {
     final photoService = _AccountTestPhotoService();
     final authService = _AccountTestAuthService();
     await tester.pumpWidget(
@@ -40,11 +42,12 @@ void main() {
 
     expect(photoService.didPick, isTrue);
     expect(
-      find.text('Your profile photo is saved to your account.'),
+      find.text('Your profile photo is saved on this device.'),
       findsOneWidget,
     );
     final image = tester.widget<Image>(find.byType(Image).first);
-    expect((image.image as NetworkImage).url, 'https://example.com/avatar.jpg');
+    expect(image.image, isA<FileImage>());
+    expect((image.image as FileImage).file.path, '/local/avatar');
   });
 }
 
@@ -119,9 +122,12 @@ class _AccountTestPhotoService implements ProfilePhotoService {
   bool didPick = false;
 
   @override
-  Future<String?> pickAndUpload(String userId) async {
+  Future<String?> loadLocalPhoto(String userId) async => null;
+
+  @override
+  Future<String?> pickAndSave(String userId) async {
     didPick = true;
-    return 'https://example.com/avatar.jpg';
+    return '/local/avatar';
   }
 
   @override

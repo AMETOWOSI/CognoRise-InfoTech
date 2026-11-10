@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -14,7 +16,7 @@ class NotesScreen extends StatefulWidget {
     super.key,
     required this.userName,
     required this.userEmail,
-    this.userPhotoUrl,
+    this.userPhotoPath,
     required this.userId,
     required this.reminderService,
     required this.onAccountTap,
@@ -23,7 +25,7 @@ class NotesScreen extends StatefulWidget {
 
   final String? userName;
   final String? userEmail;
-  final String? userPhotoUrl;
+  final String? userPhotoPath;
   final String userId;
   final NoteReminderService reminderService;
   final VoidCallback onAccountTap;
@@ -190,7 +192,7 @@ class _NotesScreenState extends State<NotesScreen> {
                 _NotesHeader(
                   userName: widget.userName,
                   userEmail: widget.userEmail,
-                  userPhotoUrl: widget.userPhotoUrl,
+                  userPhotoPath: widget.userPhotoPath,
                   onAccountTap: widget.onAccountTap,
                   onNotificationsTap: widget.onNotificationsTap,
                 ),
@@ -298,14 +300,14 @@ class _NotesHeader extends StatelessWidget {
   const _NotesHeader({
     required this.userName,
     required this.userEmail,
-    this.userPhotoUrl,
+    this.userPhotoPath,
     required this.onAccountTap,
     required this.onNotificationsTap,
   });
 
   final String? userName;
   final String? userEmail;
-  final String? userPhotoUrl;
+  final String? userPhotoPath;
   final VoidCallback onAccountTap;
   final VoidCallback onNotificationsTap;
 
@@ -316,46 +318,47 @@ class _NotesHeader extends StatelessWidget {
         : userEmail?.split('@').first ?? 'there';
 
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        IconButton(
-          key: const Key('accountInfoButton'),
-          tooltip: 'Account information',
-          onPressed: onAccountTap,
-          style: IconButton.styleFrom(
-            backgroundColor: AppColors.blue.withValues(alpha: 0.12),
-            fixedSize: const Size(48, 48),
-          ),
-          icon: CircleAvatar(
-            key: const Key('homeProfilePhoto'),
-            radius: 24,
-            backgroundColor: AppColors.blue.withValues(alpha: 0.12),
-            child: userPhotoUrl == null || userPhotoUrl!.isEmpty
-                ? const Icon(
-                    Icons.account_circle_outlined,
-                    color: AppColors.blue,
-                    size: 31,
-                  )
-                : ClipOval(
-                    child: Image.network(
-                      key: const Key('homeProfilePhotoImage'),
-                      userPhotoUrl!,
-                      width: 48,
-                      height: 48,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => const Icon(
-                        Icons.account_circle_outlined,
-                        color: AppColors.blue,
-                        size: 31,
-                      ),
-                    ),
-                  ),
-          ),
-        ),
-        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              IconButton(
+                key: const Key('accountInfoButton'),
+                tooltip: 'Account information',
+                onPressed: onAccountTap,
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.blue.withValues(alpha: 0.12),
+                  fixedSize: const Size(48, 48),
+                ),
+                icon: CircleAvatar(
+                  key: const Key('homeProfilePhoto'),
+                  radius: 24,
+                  backgroundColor: AppColors.blue.withValues(alpha: 0.12),
+                  child: userPhotoPath == null || userPhotoPath!.isEmpty
+                      ? const Icon(
+                          Icons.account_circle_outlined,
+                          color: AppColors.blue,
+                          size: 31,
+                        )
+                      : ClipOval(
+                          child: Image.file(
+                            key: const Key('homeProfilePhotoImage'),
+                            File(userPhotoPath!),
+                            width: 48,
+                            height: 48,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => const Icon(
+                              Icons.account_circle_outlined,
+                              color: AppColors.blue,
+                              size: 31,
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 8),
               Text(
                 'Welcome back,',
                 style: Theme.of(
